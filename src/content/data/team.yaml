@@ -1,0 +1,129 @@
+# ────────────────────────────────────────────────────────────────
+#  TEAM ROSTER  —  exec board and project managers only
+# ────────────────────────────────────────────────────────────────
+#  Exec board and project managers only. General members are not
+#  published. People are listed by role, class standing and major, and
+#  nothing is inferred: "Junior", not a guessed graduation year.
+#
+#  Email addresses are not published.
+#
+#  Each person needs a unique `id` (lowercase, dashes) and these fields:
+#
+#    name           Full name
+#    tier           "leadership" (exec board) or "pm" (project manager)
+#    role           Title, e.g. "President"
+#    detail         Major · class standing, e.g. "Economics · Junior"
+#    order          Sort order within their tier (lower = first)
+#    linkedin       (optional) full URL — the "in" icon appears only
+#                   once a real URL is here
+#    photo          (optional) path under /public, e.g. "/team/sarah.jpg"
+#                   Leave out to show the person's initials instead.
+#    coffeeChat     true = appears on the Coffee Chats booking grid.
+#                   Set it once that person has agreed to chat. The grid
+#                   hides itself while nobody is flagged.
+#    urm            true = also appears under "URM coffee chats"
+#    coffeeDetail   (optional) shorter detail for the coffee page
+# ────────────────────────────────────────────────────────────────
+
+# ---- Exec board ----
+- id: sarah-gomez
+  name: Sarah Gomez
+  tier: leadership
+  role: President
+  detail: Political Science · Junior
+  order: 1
+
+- id: riyaz-mehta
+  name: Riyaz Mehta
+  tier: leadership
+  role: President
+  detail: MCB · Senior · Data Science (minor)
+  order: 2
+
+- id: natalia-ochoa
+  name: Natalia Ochoa
+  tier: leadership
+  role: External VP
+  detail: MCB, Economics · Junior
+  order: 3
+
+- id: grace-sun
+  name: Grace Sun
+  tier: leadership
+  role: Internal VP
+  detail: Data Science, Statistics · Junior
+  order: 4
+
+- id: aydin-khalaji
+  name: Aydin Khalaji
+  tier: leadership
+  role: VP of Projects
+  detail: Data Science · Sophomore
+  order: 5
+
+- id: christian-alvarez
+  name: Christian Alvarez
+  tier: leadership
+  role: Finance Chair
+  detail: Business Administration · Junior
+  order: 6
+
+- id: cassius-mcneil
+  name: Cassius McNeil
+  tier: leadership
+  role: DEI Chair
+  detail: Economics · Junior
+  order: 7
+
+- id: memo-morales
+  name: Memo Morales
+  tier: leadership
+  role: Professional Development Chair
+  detail: Business Administration · Junior
+  order: 8
+
+- id: jiya-patel
+  name: Jiya Patel
+  tier: leadership
+  role: Professional Development Chair
+  detail: Business Administration · Junior
+  order: 9
+
+- id: anuj-thakur
+  name: Anuj Thakur
+  tier: leadership
+  role: Professional Development Chair
+  detail: CS, Applied Math · Senior
+  order: 10
+
+- id: sherwin-shahrabi
+  name: Sherwin Shahrabi
+  tier: leadership
+  role: Marketing Chair
+  detail: Applied Math · Junior
+  order: 11
+
+- id: krishna-nagarajan
+  name: Krishna Nagarajan
+  tier: leadership
+  role: Marketing Chair
+  detail: Economics · Sophomore
+  order: 12
+
+- id: diya-bambawale
+  name: Diya Bambawale
+  tier: leadership
+  role: Social Chair
+  detail: Undeclared · Sophomore
+  order: 13
+
+- id: sufyan-ashraf
+  name: Sufyan Ashraf
+  tier: leadership
+  role: Consultant
+  detail: Environmental Economics · Junior
+  order: 14
+
+# ---- Project managers ----
+# Add PMs here with `tier: pm` and they get their own section on the
+# Team page automatically. While none are listed the section is hidden.

@@ -1,0 +1,47 @@
+---
+/*
+ * Layout for the four content pages (+ 404): the centred "sheet" with a
+ * sticky nav, the left index rail, the page body, and the footer. The
+ * homepage does NOT use this — it frames the nav/footer full-bleed.
+ */
+import Layout from './Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import IndexRail from '../components/IndexRail.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  railLabel: string;
+  railTop?: string;
+  railBottom: string;
+}
+const {
+  title,
+  description,
+  ogImage,
+  railLabel,
+  railTop = '01',
+  railBottom,
+} = Astro.props;
+---
+
+<Layout title={title} description={description} ogImage={ogImage}>
+  <div class="shell">
+    <Nav />
+    <div class="rail-grid">
+      <IndexRail label={railLabel} top={railTop} bottom={railBottom} />
+      <main id="main" class="rail-content">
+        <slot />
+      </main>
+    </div>
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .rail-content {
+    min-width: 0;
+  }
+</style>

@@ -1,0 +1,190 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import InnerLayout from '../layouts/InnerLayout.astro';
+import Section from '../components/Section.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import EmptyState from '../components/EmptyState.astro';
+import ClientStrip from '../components/ClientStrip.astro';
+import { site, isSet, clientDisplay } from '../config';
+import { fillStats } from '../lib/copy';
+
+const page = await getEntry('pages', 'projects');
+const c = page.data.copy;
+
+const all = (await getCollection('projects')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+const featured = all.find((p) => p.data.featured);
+const lead = all.find((p) => p.data.lead);
+const smalls = all.filter((p) => !p.data.featured && !p.data.lead);
+
+/* While no case study has been published, the page says so rather than
+   showing a placeholder. Drop a file into src/content/projects/ and the
+   real sections take over automatically. */
+const hasWork = all.length > 0;
+const showClientCta = isSet(site.partnersEmail);
+
+/* The full client roster lives here rather than on the homepage. Until
+   the written case studies land, the client list is the work history,
+   and this is the page people come to for it. */
+const clients = await getCollection('clients');
+const showClients =
+  clientDisplay !== 'off' && clients.some((c) => c.data.cleared);
+
+const sections = [
+  'hero',
+  ...(showClients ? ['clients'] : []),
+  ...(hasWork
+    ? [...(featured ? ['featured'] : []), 'grid']
+    : ['empty']),
+  ...(showClientCta ? ['clientCta'] : []),
+];
+const n = (key: string) => String(sections.indexOf(key) + 1).padStart(2, '0');
+const last = String(sections.length).padStart(2, '0');
+---
+
+<InnerLayout
+  title={page.data.title}
+  description={page.data.description}
+  railLabel={c.railLabel}
+  railBottom={last}
+>
+  <!-- hero -->
+  <Section n={n('hero')} eyebrow={c.heroEyebrow} noRule>
+    <h1 class="hero-title">{c.heading}</h1>
+    <p class="hero-intro prose">{fillStats(c.intro)}</p>
+  </Section>
+
+  <!-- the client roster -->
+  {
+    showClients && (
+      <Section n={n('clients')} eyebrow={c.clientsEyebrow}>
+        <h2 class="clients-h">{c.clientsHeading}</h2>
+        <p class="clients-sub prose">{c.clientsSub}</p>
+        <ClientStrip clients={clients} bands="all" />
+      </Section>
+    )
+  }
+
+  {
+    hasWork ? (
+      <>
+        {featured && (
+          <Section n={n('featured')} eyebrow={c.featuredEyebrow}>
+            <ProjectCard project={featured.data} variant="featured" />
+          </Section>
+        )}
+        <Section n={n('grid')} eyebrow={c.gridEyebrow}>
+          {lead && (
+            <div class="lead-wrap">
+              <ProjectCard project={lead.data} variant="lead" />
+            </div>
+          )}
+          <div class="grid-projects">
+            {smalls.map((p) => (
+              <ProjectCard project={p.data} variant="small" />
+            ))}
+          </div>
+        </Section>
+      </>
+    ) : (
+      <Section n={n('empty')} eyebrow={c.emptyEyebrow}>
+        <EmptyState heading={c.empty.heading} body={c.empty.body} />
+      </Section>
+    )
+  }
+
+  {
+    showClientCta && (
+      <Section
+        id="work-with-us"
+        n={n('clientCta')}
+        eyebrow={c.clientCtaEyebrow}
+        variant="panel"
+      >
+        <h2 class="cta-title">{c.clientCta.heading}</h2>
+        <p class="cta-body prose">{c.clientCta.body}</p>
+        <a class="cta-btn" href={`mailto:${site.partnersEmail}`}>
+          {c.clientCta.button}
+        </a>
+      </Section>
+    )
+  }
+</InnerLayout>
+
+<style>
+  .hero-title {
+    font-size: 54px;
+    line-height: 0.9;
+  }
+  .hero-intro {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin-top: 16px;
+  }
+  .clients-h {
+    font-size: 30px;
+    line-height: 1;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .clients-sub {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 12px 0 22px;
+    max-width: 54ch;
+  }
+  .lead-wrap {
+    margin-bottom: 12px;
+  }
+  .grid-projects {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .cta-title {
+    font-size: 32px;
+    line-height: 1.02;
+  }
+  .cta-body {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 14px 0 20px;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: var(--btn);
+    color: var(--btn-ink);
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 15px 26px;
+  }
+  .cta-btn:hover {
+    color: var(--btn-ink);
+    filter: brightness(1.08);
+  }
+
+  @media (min-width: 720px) {
+    .hero-title {
+      font-size: 72px;
+    }
+    .clients-h {
+      font-size: 42px;
+    }
+    .clients-sub {
+      margin-bottom: 28px;
+    }
+    .grid-projects {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .cta-title {
+      font-size: 44px;
+    }
+  }
+</style>

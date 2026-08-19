@@ -1,0 +1,126 @@
+---
+/*
+ * Sticky top navigation. Logo (auto light/dark) on the left; primary
+ * links (desktop) and the single Apply CTA on the right. On mobile it
+ * collapses to just the logo + Apply button, matching the comps.
+ */
+import Logo from './Logo.astro';
+import { applyUrl, applyLive } from '../config';
+
+const links = [
+  { href: '/projects', label: 'Projects' },
+  { href: '/team', label: 'Team' },
+  { href: '/coffee-chats', label: 'Coffee chats' },
+  { href: '/join', label: 'Join' },
+];
+
+// While there is no live application (see src/config.ts) the nav shows a
+// status chip instead of a button that goes nowhere.
+// Normalise the current path so "/team/" and "/team" both match.
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<nav class="nav" aria-label="Primary">
+  <a href="/" class="nav-home" aria-label="Nova Consulting, home">
+    <Logo height={18} />
+  </a>
+  <div class="nav-right">
+    <ul class="nav-links">
+      {
+        links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              aria-current={current === l.href ? 'page' : undefined}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    {
+      applyLive ? (
+        <a href={applyUrl} class="nav-apply">
+          Apply now
+        </a>
+      ) : (
+        <span class="nav-apply is-closed">Applications soon</span>
+      )
+    }
+  </div>
+</nav>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 16px;
+    background: var(--bg);
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+  .nav-home {
+    display: flex;
+    align-items: center;
+  }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .nav-links {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 26px;
+  }
+  .nav-links a {
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .nav-links a:hover,
+  .nav-links a[aria-current='page'] {
+    color: var(--accent);
+  }
+  .nav-apply {
+    background: var(--yellow);
+    color: var(--yellow-ink);
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+  a.nav-apply:hover {
+    color: var(--yellow-ink);
+    filter: brightness(1.05);
+  }
+  .nav-apply.is-closed {
+    background: transparent;
+    border: var(--hairline) solid var(--rule);
+    color: var(--accent);
+  }
+
+  @media (min-width: 720px) {
+    .nav {
+      padding: 18px 28px;
+    }
+    .nav-links {
+      display: flex;
+    }
+    .nav-apply {
+      font-size: 13px;
+      padding: 11px 18px;
+    }
+  }
+</style>

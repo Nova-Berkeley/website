@@ -1,0 +1,21 @@
+# ────────────────────────────────────────────────────────────────
+#  ALUMNI PLACEMENTS  (shown on the Team page)
+# ────────────────────────────────────────────────────────────────
+#  Company names ONLY. Never list an individual's name without their
+#  explicit consent.
+#
+#  While this list is empty the "where Nova alumni go" section is hidden.
+#  The site does not show a placeholder list of firms.
+#
+#  To bring the section back, delete the [] below and add entries:
+#
+#    - id: bcg
+#      company: BCG
+#      order: 1
+#
+#    - id: aws
+#      company: AWS
+#      order: 2
+# ────────────────────────────────────────────────────────────────
+
+[]

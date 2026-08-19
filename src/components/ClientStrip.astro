@@ -1,0 +1,323 @@
+---
+/*
+ * The "selected clients" section — the site's flagship credibility
+ * moment, so it is built to carry weight rather than sit as a footnote.
+ *
+ * Two hard rules, enforced here rather than trusted to whoever edits
+ * the data:
+ *   1. Only clients with `cleared: true` are rendered. The uncleared
+ *      ones in clients.yaml never reach the page, and nothing hints at
+ *      their number.
+ *   2. Nothing is invented. A cleared client with no logo file renders
+ *      as a name tile in the same grid, so a missing SVG degrades to
+ *      something designed instead of a broken image.
+ *
+ * Mode comes from `clientDisplay` in src/config.ts — 'logos', 'names',
+ * or 'off'. Switching it is the whole job; no template edits.
+ *
+ * LAYOUT. Two bands: a large featured row for the biggest names, then a
+ * denser band for the rest. Which is which is the `featured` flag in
+ * clients.yaml, so the split is a content decision, not a code one.
+ *
+ * `bands` picks how much to show. The homepage asks for 'featured' and
+ * gets that row alone; the work page asks for 'all' and gets the full
+ * roster underneath it.
+ *
+ * Column counts are chosen so no row ends with a single orphaned tile:
+ * six across for the featured band (which divides by 2 and 3 at the
+ * narrower breakpoints too) and five for the denser one. Hierarchy
+ * between the bands comes from tile height and logo size, not from tile
+ * width, so the dense tiles reading slightly wider is deliberate.
+ *
+ * COLOUR. Logos keep their own brand colours on a white tile — the
+ * surface each mark was drawn for. In light mode the tile would vanish
+ * into the near-white page, so it takes a hairline edge there.
+ *
+ * SIZING. Logos are normalised by *area*, not width or height. A long
+ * wordmark (Oracle, 7.7:1) and a squarer mark (NASA insignia, 1.2:1)
+ * only look equally weighted if each covers about the same amount of
+ * ink, so every logo's height is set to sqrt(AREA / aspect) — with the
+ * aspect read from the SVG's own viewBox at build time. Nobody hand-
+ * tunes a scale, and a new logo is sized correctly the moment it lands.
+ */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { CollectionEntry } from 'astro:content';
+import { clientDisplay } from '../config';
+
+interface Props {
+  /** Optional. Omit when the surrounding section already has a label. */
+  label?: string;
+  clients: CollectionEntry<'clients'>[];
+  /** 'featured' shows only the featured row. 'all' shows both bands. */
+  bands?: 'featured' | 'all';
+}
+const { label, clients, bands = 'all' } = Astro.props;
+
+/* Rule 1, applied before anything else touches the list. */
+const cleared = clients
+  .filter((c) => c.data.cleared)
+  .sort((a, b) => a.data.order - b.data.order);
+
+/* Target ink area inside a tile, in px², per band. The featured band is
+   roughly double the area of the dense one. */
+const BAND = {
+  featured: { area: 7000, minH: 32, maxH: 84, maxW: 148 },
+  dense: { area: 3400, minH: 20, maxH: 56, maxW: 140 },
+};
+
+/** Read an SVG's aspect ratio from its viewBox (or width/height). */
+function aspectOf(publicPath: string): number | null {
+  try {
+    /* Resolved against the project root, not this file — Vite rewrites
+       import.meta.url during the build and it would not point at
+       /public any more. */
+    const svg = readFileSync(join(process.cwd(), 'public', publicPath), 'utf8');
+    const vb = svg.match(
+      /viewBox=["']\s*[\d.eE+-]+[ ,]+[\d.eE+-]+[ ,]+([\d.eE+]+)[ ,]+([\d.eE+]+)/
+    );
+    if (vb) {
+      const w = Number(vb[1]);
+      const h = Number(vb[2]);
+      if (w > 0 && h > 0) return w / h;
+    }
+    const w = svg.match(/<svg[^>]*\swidth=["']([\d.]+)/);
+    const h = svg.match(/<svg[^>]*\sheight=["']([\d.]+)/);
+    if (w && h && Number(h[1]) > 0) return Number(w[1]) / Number(h[1]);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function sizeFor(aspect: number, band: (typeof BAND)['dense']) {
+  // Equal ink: height = sqrt(area / aspect).
+  let height = Math.sqrt(band.area / aspect);
+  height = Math.min(band.maxH, Math.max(band.minH, height));
+  // Then hold the width ceiling, keeping the logo's own proportions, so
+  // a very long wordmark gives up a little area rather than overflowing.
+  if (height * aspect > band.maxW) height = band.maxW / aspect;
+  return { height: Math.round(height), width: Math.round(height * aspect) };
+}
+
+function prepare(entries: typeof cleared, key: 'featured' | 'dense') {
+  return entries.map((c) => {
+    const aspect = c.data.logo ? aspectOf(c.data.logo) : null;
+    const size = aspect === null ? null : sizeFor(aspect, BAND[key]);
+    return {
+      name: c.data.name,
+      /* A logo is only used when we could actually read the file. */
+      logo: size === null ? null : c.data.logo,
+      height: size?.height ?? null,
+      width: size?.width ?? null,
+    };
+  });
+}
+
+const featured = prepare(
+  cleared.filter((c) => c.data.featured),
+  'featured'
+);
+const dense =
+  bands === 'all'
+    ? prepare(
+        cleared.filter((c) => !c.data.featured),
+        'dense'
+      )
+    : [];
+
+const show =
+  clientDisplay !== 'off' && featured.length + dense.length > 0;
+const asLogos = clientDisplay === 'logos';
+---
+
+{
+  show && (
+    <div class:list={['clients', asLogos ? 'as-logos' : 'as-names']}>
+      {label && <p class="clients-label">{label}</p>}
+
+      {asLogos ? (
+        <>
+          {featured.length > 0 && (
+            <ul class="tiles band-featured">
+              {featured.map((c) => (
+                <li class="tile">
+                  {c.logo ? (
+                    <img
+                      src={c.logo}
+                      alt={`${c.name} logo`}
+                      width={c.width}
+                      height={c.height}
+                      loading="lazy"
+                      decoding="async"
+                      style={`width:${c.width}px;aspect-ratio:${c.width}/${c.height}`}
+                    />
+                  ) : (
+                    <span class="tile-name">{c.name}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {dense.length > 0 && (
+            <ul class="tiles band-dense">
+              {dense.map((c) => (
+                <li class="tile">
+                  {c.logo ? (
+                    <img
+                      src={c.logo}
+                      alt={`${c.name} logo`}
+                      width={c.width}
+                      height={c.height}
+                      loading="lazy"
+                      decoding="async"
+                      style={`width:${c.width}px;aspect-ratio:${c.width}/${c.height}`}
+                    />
+                  ) : (
+                    <span class="tile-name">{c.name}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : (
+        <ul class="names">
+          {[...featured, ...dense].map((c) => (
+            <li>
+              <span class="client-name">{c.name}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+<style>
+  .clients-label {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 16px;
+  }
+
+  /* ---- Logo tiles ---- */
+  .tiles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    align-items: stretch;
+  }
+  .tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tile-white);
+    border: 1px solid var(--tile-edge);
+    border-radius: var(--radius-tile);
+    padding: 14px 12px;
+    min-width: 0;
+  }
+  /* Logos carry their own brand colour; the tile is the white surface
+     they were drawn for. Sizes are set inline, from the SVG's own
+     proportions — never scaled to fit the tile. */
+  /* Width and proportions are set inline from the SVG's own viewBox.
+     `max-width: 100%` only ever bites in the narrowest column, and
+     because the ratio is inline the logo stays undistorted when it
+     does — it gives up a couple of pixels, never its legibility. */
+  .tile img {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  .tile-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.1;
+    /* Always on white, so it takes the on-tile ink colour rather than a
+       page token that would disappear in dark mode. */
+    color: var(--tile-ink);
+  }
+
+  /* Phone: two across in both bands. Tiles get shorter in the dense
+     band, but the logos inside never shrink. */
+  .band-featured {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .band-featured .tile {
+    min-height: 104px;
+  }
+  .band-dense {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .band-dense .tile {
+    min-height: 78px;
+  }
+  .band-featured .tile-name {
+    font-size: 19px;
+  }
+
+  /* ---- Names mode ---- */
+  .names {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 20px;
+  }
+  .client-name {
+    font-family: var(--font-display);
+    font-size: 30px;
+    text-transform: uppercase;
+    color: var(--client);
+    line-height: 1.1;
+  }
+
+  @media (min-width: 560px) {
+    .band-featured {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .band-dense {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 900px) {
+    .clients-label {
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+    .band-featured {
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    .band-featured .tile {
+      min-height: 132px;
+      padding: 20px 14px;
+    }
+    .band-dense {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .band-dense .tile {
+      min-height: 92px;
+      padding: 16px 12px;
+    }
+    .client-name {
+      font-size: 36px;
+    }
+  }
+</style>

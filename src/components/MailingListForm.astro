@@ -1,0 +1,139 @@
+---
+/*
+ * Mailing-list signup with success / error states.
+ *
+ * Only rendered when `mailingListEndpoint` is set in src/config.ts — the
+ * Join page leaves the whole section out otherwise, so this component is
+ * never asked to stand in for a list that does not exist.
+ *
+ * Progressive enhancement: without JS it is a normal POST to the
+ * endpoint; with JS it submits in the background and shows an inline
+ * success or error message without a page reload.
+ */
+import { mailingListEndpoint } from '../config';
+
+interface Props {
+  placeholder: string;
+  button: string;
+  successText?: string;
+  errorText?: string;
+}
+const {
+  placeholder,
+  button,
+  successText = "✓ You're on the list.",
+  errorText = 'Something went wrong. Please try again in a moment.',
+} = Astro.props;
+
+---
+
+<form
+  class="ml-form"
+  action={mailingListEndpoint}
+  method="POST"
+  data-success={successText}
+  data-error={errorText}
+>
+  <label class="sr-only" for="ml-email">Email address</label>
+  <input
+    id="ml-email"
+    class="ml-input"
+    type="email"
+    name="email"
+    placeholder={placeholder}
+    required
+    autocomplete="email"
+  />
+  <button type="submit" class="ml-button">{button}</button>
+</form>
+<p class="ml-msg" role="status" aria-live="polite" hidden></p>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('.ml-form').forEach((f) => {
+    const msg = f.nextElementSibling as HTMLElement | null;
+    const show = (text: string, ok: boolean) => {
+      if (!msg) return;
+      msg.textContent = text;
+      msg.dataset.ok = String(ok);
+      msg.hidden = false;
+    };
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const success = f.dataset.success || 'Thanks!';
+      const error = f.dataset.error || 'Something went wrong.';
+      const btn = f.querySelector('button');
+      btn?.setAttribute('disabled', 'true');
+      try {
+        const res = await fetch(f.action, {
+          method: 'POST',
+          body: new FormData(f),
+          headers: { Accept: 'application/json' },
+        });
+        if (res.ok) {
+          show(success, true);
+          f.reset();
+        } else {
+          show(error, false);
+        }
+      } catch {
+        show(error, false);
+      } finally {
+        btn?.removeAttribute('disabled');
+      }
+    });
+  });
+</script>
+
+<style>
+  .ml-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .ml-input {
+    flex: 1;
+    min-width: 0;
+    height: 46px;
+    background: transparent;
+    border: var(--hairline) solid var(--rule);
+    color: var(--ink);
+    padding: 0 12px;
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+  .ml-input::placeholder {
+    color: var(--dim);
+  }
+  .ml-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .ml-button {
+    flex: 0 0 auto;
+    height: 46px;
+    background: var(--btn);
+    color: var(--btn-ink);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0 18px;
+    cursor: pointer;
+  }
+  .ml-button:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .ml-msg {
+    font-family: var(--font-body);
+    font-size: 13px;
+    margin: 10px 0 0;
+  }
+  .ml-msg[data-ok='true'] {
+    color: var(--accent);
+  }
+  .ml-msg[data-ok='false'] {
+    color: var(--danger);
+  }
+</style>

@@ -1,0 +1,107 @@
+# ────────────────────────────────────────────────────────────────
+#  RECRUITMENT TIMELINE  (shown on the Join page and the homepage)
+# ────────────────────────────────────────────────────────────────
+#  Dates through the application deadline are set. The interview stages
+#  after it are not, so they read "TBA" until someone fills them in.
+#
+#  Fields:
+#    date      What the visitor reads, e.g. "Wed Aug 26". Leave empty
+#              for "TBA".
+#    on        YYYY-MM-DD. This is what drives the "happening now" and
+#              "next up" highlights — the site compares it against the
+#              real current date in Berkeley, so nobody has to remember
+#              to move a flag. Leave empty when the date is not settled.
+#    time      Optional, e.g. "8:00–10:00 PM".
+#    location  Optional, e.g. "SOCS 136".
+#    pending   Optional. Set it to a short phrase and the stage shows a
+#              small marker carrying that text, for a detail that is not
+#              settled. Clear it once it is.
+#
+#  ⚠ Keep `date` and `on` describing the same day. `date` is what people
+#  read; `on` is what the site reasons about.
+# ────────────────────────────────────────────────────────────────
+
+- id: coffee-chats-open
+  n: '01'
+  name: Coffee Chats Open
+  date: Wed Aug 26
+  on: '2026-08-26'
+  desc: Booking opens for chats with current members. You may book up to three.
+
+- id: nova-on-the-glade
+  n: '02'
+  name: Nova on the Glade
+  date: Sat Aug 29
+  on: '2026-08-29'
+  time: 2:00–4:00 PM
+  desc: Find us on the Glade to meet the club before applications open.
+
+- id: infosession-1
+  n: '03'
+  name: Infosession
+  date: Mon Aug 31
+  on: '2026-08-31'
+  time: 8:00–10:00 PM
+  location: SOCS 136
+  desc: What a semester at Nova involves and how recruitment works.
+
+- id: infosession-2
+  n: '04'
+  name: Infosession
+  date: Wed Sep 2
+  on: '2026-09-02'
+  time: 8:00–10:00 PM
+  location: SOCS 136
+  desc: The same session, repeated. Come to whichever one you can make.
+
+- id: infosession-3
+  n: '05'
+  name: Infosession
+  date: Thu Sep 3
+  on: '2026-09-03'
+  time: 8:00–10:00 PM
+  location: SOCS 136
+  desc: The last of the three sessions before applications close.
+
+- id: applications-due
+  n: '06'
+  name: Applications Due
+  date: Fri Sep 4
+  on: '2026-09-04'
+  time: 3:00 PM
+  desc: A resume drop, plus a note of which Nova events you attended. Hard deadline.
+
+- id: round-1-group-case
+  n: '07'
+  name: 'Round 1: Group Case'
+  date: ''
+  on: ''
+  desc: A 30–45 minute group case study with other applicants.
+
+- id: round-2-individual
+  n: '08'
+  name: 'Round 2: Individual Interview'
+  date: ''
+  on: ''
+  desc: Roughly 40 minutes. A short case, then a behavioral conversation.
+
+- id: social-night
+  n: '09'
+  name: Social Night
+  date: ''
+  on: ''
+  desc: Optional but encouraged. Meet the club outside a professional setting.
+
+- id: decisions-released
+  n: '10'
+  name: Decisions Released
+  date: ''
+  on: ''
+  desc: We let every candidate know where they stand.
+
+- id: first-meeting
+  n: '11'
+  name: First Meeting
+  date: ''
+  on: ''
+  desc: Onboarding, team placement, and the start of the professional development bootcamp.

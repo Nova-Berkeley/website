@@ -1,0 +1,105 @@
+---
+/*
+ * Member and client quotes.
+ *
+ * Renders nothing at all when it is handed an empty list, so the
+ * section costs the page nothing until there is something to show. A
+ * quote only publishes once its author has consented. Drop a file into
+ * src/content/voices/ and the section appears on its own.
+ */
+import { render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entries: CollectionEntry<'voices'>[];
+}
+const { entries } = Astro.props;
+
+const items = await Promise.all(
+  entries.map(async (entry) => ({
+    ...entry.data,
+    Content: (await render(entry)).Content,
+  }))
+);
+---
+
+{
+  items.length > 0 && (
+    <div class="voices">
+      {items.map(({ name, detail, Content }) => (
+        <figure class="voice">
+          <blockquote class="voice-quote prose">
+            <Content />
+          </blockquote>
+          <figcaption class="voice-by">
+            <span class="voice-name">{name}</span>
+            <span class="voice-detail">{detail}</span>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .voices {
+    display: grid;
+    gap: 12px;
+  }
+  .voice {
+    border: var(--hairline) solid var(--rule);
+    background: var(--panel);
+    padding: 20px 18px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+  }
+  .voice-quote {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .voice-quote :global(p) {
+    margin: 0 0 0.6em;
+  }
+  .voice-quote :global(p:first-child)::before {
+    content: '\\201C';
+  }
+  .voice-quote :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .voice-quote :global(p:last-child)::after {
+    content: '\\201D';
+  }
+  .voice-by {
+    border-top: 1px solid var(--rule-soft);
+    padding-top: 12px;
+  }
+  .voice-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .voice-detail {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 5px;
+  }
+  @media (min-width: 720px) {
+    .voices {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .voice-quote {
+      font-size: 16px;
+    }
+  }
+</style>

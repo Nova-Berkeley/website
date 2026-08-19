@@ -1,0 +1,62 @@
+---
+/*
+ * The honest-empty panel.
+ *
+ * Used wherever a section has no verified content yet: the site says so
+ * plainly instead of showing a fabricated stand-in. Every use of this
+ * component is a refill point — the moment real content exists, the
+ * page renders that instead and this disappears on its own.
+ */
+interface Props {
+  heading: string;
+  body?: string;
+  class?: string;
+}
+const { heading, body, class: cls } = Astro.props;
+---
+
+<div class:list={['empty', cls]}>
+  <span class="empty-mark" aria-hidden="true"></span>
+  <h3 class="empty-heading">{heading}</h3>
+  {body && <p class="empty-body prose">{body}</p>}
+  <slot />
+</div>
+
+<style>
+  .empty {
+    border: var(--hairline) solid var(--rule);
+    background: var(--panel);
+    padding: 40px 20px 44px;
+    text-align: center;
+  }
+  .empty-mark {
+    display: block;
+    width: 28px;
+    height: var(--hairline);
+    background: var(--accent);
+    margin: 0 auto 18px;
+  }
+  .empty-heading {
+    font-size: 24px;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+  .empty-body {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 12px auto 0;
+    max-width: 46ch;
+  }
+  @media (min-width: 720px) {
+    .empty {
+      padding: 64px 24px 68px;
+    }
+    .empty-heading {
+      font-size: 30px;
+    }
+    .empty-body {
+      font-size: 14px;
+    }
+  }
+</style>

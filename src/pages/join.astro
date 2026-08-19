@@ -1,0 +1,346 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import InnerLayout from '../layouts/InnerLayout.astro';
+import Section from '../components/Section.astro';
+import Timeline from '../components/Timeline.astro';
+import Faq from '../components/Faq.astro';
+import MailingListForm from '../components/MailingListForm.astro';
+import ApplyCta from '../components/ApplyCta.astro';
+import PhotoSlot from '../components/PhotoSlot.astro';
+import { mailingListEndpoint, isSet } from '../config';
+
+const page = await getEntry('pages', 'join');
+const c = page.data.copy;
+
+const stages = (await getCollection('timeline')).sort(
+  (a, b) => Number(a.data.n) - Number(b.data.n)
+);
+const faqEntries = (await getCollection('faq'))
+  .filter((f) => f.data.category === 'join')
+  .sort((a, b) => a.data.order - b.data.order);
+
+/* The club has no mailing list, so the "recruitment reminders" section
+   is absent rather than shown as a dead form. Set `mailingListEndpoint`
+   in src/config.ts if one is ever created and it returns on its own.
+
+   Section numbers are derived so a hidden section never leaves a gap. */
+const showMailing = isSet(mailingListEndpoint);
+
+/* Candid photos of the club. Empty until someone adds files, and the
+   section is absent rather than showing empty frames. */
+type Candid = { src: string; alt: string };
+const candids = ((c.candids ?? []) as Candid[]).filter((p) =>
+  Boolean(p?.src?.trim())
+);
+
+const sections = [
+  'hero',
+  'timeline',
+  'process',
+  'eligibility',
+  ...(candids.length > 0 ? ['candids'] : []),
+  'faq',
+  'coffee',
+  ...(showMailing ? ['mailing'] : []),
+  'cta',
+];
+const n = (key: string) => String(sections.indexOf(key) + 1).padStart(2, '0');
+const last = String(sections.length).padStart(2, '0');
+
+type ProcessStep = {
+  title: string;
+  step: string;
+  involves: string[];
+  advice: string;
+};
+---
+
+<InnerLayout
+  title={page.data.title}
+  description={page.data.description}
+  railLabel={c.railLabel}
+  railBottom={last}
+>
+  <!-- hero -->
+  <Section n={n('hero')} eyebrow={c.heroEyebrow} noRule>
+    <h1 class="hero-title">{c.heading}</h1>
+    <p class="hero-intro prose">{c.intro}</p>
+    <ApplyCta label={c.ctaHero} variant="yellow" block class="hero-cta" />
+  </Section>
+
+  <!-- recruitment timeline -->
+  <Section n={n('timeline')} eyebrow={c.timelineEyebrow} class="tl-section">
+    <p class="sub-note">{c.timelineNote}</p>
+    <Timeline stages={stages} />
+  </Section>
+
+  <!-- the process -->
+  <Section n={n('process')} eyebrow={c.processEyebrow}>
+    <div class="process">
+      {
+        (c.process as ProcessStep[]).map((p) => (
+          <div class="proc-card">
+            <div class="proc-head">
+              <h3 class="proc-title">{p.title}</h3>
+              <span class="proc-step">{p.step}</span>
+            </div>
+            <p class="proc-label">What it involves</p>
+            <ul class="proc-list prose">
+              {p.involves.map((i) => (
+                <li>{i}</li>
+              ))}
+            </ul>
+            <p class="proc-advice prose">
+              <span class="proc-advice-label">Advice&nbsp;&nbsp;</span>
+              {p.advice}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <!-- eligibility -->
+  <Section n={n('eligibility')} eyebrow={c.eligibilityEyebrow}>
+    <ul class="elig">
+      {
+        (c.eligibility as string[]).map((e) => (
+          <li class="elig-item prose">
+            <span class="elig-arrow" aria-hidden="true">
+              →
+            </span>
+            {e}
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <!-- candid photos (absent until files are added to join.md) -->
+  {
+    candids.length > 0 && (
+      <Section n={n('candids')} eyebrow={c.candidsEyebrow}>
+        <div class="candids">
+          {candids.map((p) => (
+            <PhotoSlot src={p.src} alt={p.alt} ratio="3 / 2" wash={false} />
+          ))}
+        </div>
+      </Section>
+    )
+  }
+
+  <!-- FAQ -->
+  <Section n={n('faq')} eyebrow={c.faqEyebrow} class="faq-section">
+    <Faq entries={faqEntries} />
+  </Section>
+
+  <!-- coffee chats teaser -->
+  <Section n={n('coffee')} eyebrow={c.coffeeTeaserEyebrow}>
+    <div class="teaser">
+      <h3 class="teaser-title">{c.coffeeTeaser.heading}</h3>
+      <p class="teaser-body prose">{c.coffeeTeaser.body}</p>
+      <a href="/coffee-chats" class="teaser-link">{c.coffeeTeaser.cta}</a>
+    </div>
+  </Section>
+
+  <!-- mailing list (absent unless a real list is configured) -->
+  {
+    showMailing && (
+      <Section
+        id="stay-in-the-loop"
+        n={n('mailing')}
+        eyebrow={c.mailingEyebrow}
+      >
+        <h2 class="ml-title">{c.mailing.heading}</h2>
+        <p class="ml-sub prose">{c.mailing.body}</p>
+        <MailingListForm
+          placeholder={c.mailing.placeholder}
+          button={c.mailing.button}
+        />
+      </Section>
+    )
+  }
+
+  <!-- final apply CTA -->
+  <Section id="apply" n={n('cta')} eyebrow={c.finalCtaEyebrow} variant="yellow" center>
+    <h2 class="cta-title">{c.finalCta.heading}</h2>
+    <ApplyCta label={c.finalCta.button} variant="ink" />
+  </Section>
+</InnerLayout>
+
+<style>
+  .hero-title {
+    font-size: 50px;
+    line-height: 0.9;
+  }
+  .hero-intro {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 16px 0 20px;
+  }
+  .sub-note {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--client);
+    text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+  .tl-section :global(.section-eyebrow) {
+    margin-bottom: 8px;
+  }
+
+  /* Process cards */
+  .process {
+    display: grid;
+    gap: 12px;
+  }
+  .proc-card {
+    background: var(--panel);
+    padding: 18px 16px;
+  }
+  .proc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .proc-title {
+    font-size: 19px;
+    text-transform: uppercase;
+  }
+  .proc-step {
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .proc-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin: 14px 0 8px;
+  }
+  .proc-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .proc-advice {
+    border-top: 1px solid var(--rule-soft);
+    margin-top: 14px;
+    padding-top: 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+  }
+  .proc-advice-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* Eligibility */
+  .elig {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .elig-item {
+    display: flex;
+    gap: 10px;
+    padding: 12px 0;
+    border-top: 1px solid var(--rule-soft);
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .elig-arrow {
+    color: var(--accent);
+  }
+
+  /* Candid strip */
+  .candids {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .faq-section :global(.section-eyebrow) {
+    margin-bottom: 0;
+  }
+
+  /* Coffee teaser */
+  .teaser {
+    border: var(--hairline) solid var(--rule);
+    background: var(--panel);
+    padding: 20px 18px;
+  }
+  .teaser-title {
+    font-size: 24px;
+    line-height: 1.05;
+  }
+  .teaser-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 10px 0 16px;
+  }
+  .teaser-link {
+    display: inline-block;
+    border: var(--hairline) solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 18px;
+  }
+
+  /* Mailing list */
+  .ml-title {
+    font-size: 22px;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+  .ml-sub {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 8px 0 0;
+  }
+
+  .cta-title {
+    font-size: 40px;
+    line-height: 0.95;
+    margin-bottom: 20px;
+  }
+
+  @media (min-width: 720px) {
+    .hero-title {
+      font-size: 68px;
+    }
+    .process {
+      grid-template-columns: 1fr 1fr;
+    }
+    .candids {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .cta-title {
+      font-size: 54px;
+    }
+  }
+  @media (min-width: 1040px) {
+    .process {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

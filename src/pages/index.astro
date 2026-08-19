@@ -1,0 +1,575 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import ApplyCta from '../components/ApplyCta.astro';
+import PhotoSlot from '../components/PhotoSlot.astro';
+import Voices from '../components/Voices.astro';
+import ClientStrip from '../components/ClientStrip.astro';
+import { stats, clientDisplay } from '../config';
+import { berkeleyToday, statuses } from '../lib/schedule';
+
+const page = await getEntry('pages', 'home');
+const c = page.data.copy;
+
+const voices = (await getCollection('voices')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+
+/* ClientStrip does the filtering itself, but the section number depends
+   on whether anything will render, so we check the same condition here. */
+const clients = await getCollection('clients');
+/* The homepage shows the featured row only. The full roster lives on
+   the work page, where it carries a section of its own. */
+const showClients =
+  clientDisplay !== 'off' &&
+  clients.some((c) => c.data.cleared && c.data.featured);
+
+/* The homepage shows the next few stages rather than the first few, so
+   it keeps pointing at what is actually coming up as the cycle moves. */
+const allStages = (await getCollection('timeline')).sort(
+  (a, b) => Number(a.data.n) - Number(b.data.n)
+);
+const stageStatus = statuses(
+  allStages.map((s) => s.data.on),
+  berkeleyToday()
+);
+const firstLive = Math.max(
+  0,
+  stageStatus.findIndex((st) => st !== 'done')
+);
+const stages = allStages
+  .slice(firstLive, firstLive + 4)
+  .map((s, i) => ({ ...s.data, status: stageStatus[firstLive + i] }));
+
+/* Section numbers are derived, not hard-coded, so a section that has no
+   verified content yet can drop out without leaving a hole in the
+   numbering (01 / 02 / 04 …). Add a key here when you add a section. */
+const sections = [
+  'hero',
+  'stats',
+  ...(showClients ? ['clients'] : []),
+  'why',
+  ...(voices.length > 0 ? ['voices'] : []),
+  'recruitment',
+];
+const n = (key: string) =>
+  String(sections.indexOf(key) + 1).padStart(2, '0');
+
+/* The rail prints the same numbers, split into a top and bottom stack. */
+const railNums = sections.map((_, i) => String(i + 1).padStart(2, '0'));
+const railTop = railNums.slice(0, Math.ceil(railNums.length / 2));
+const railBottom = railNums.slice(Math.ceil(railNums.length / 2));
+
+type Differentiator = { title: string; body: string };
+---
+
+<Layout title={page.data.title} description={page.data.description}>
+  <div class="home">
+    <div class="home-grid">
+      <!-- persistent index rail -->
+      <div class="home-rail" aria-hidden="true">
+        <div class="rail-nums">
+          {railTop.map((x) => <span>{x}</span>)}
+        </div>
+        <span class="rail-label">{c.railLabel}</span>
+        <div class="rail-nums">
+          {railBottom.map((x) => <span>{x}</span>)}
+        </div>
+      </div>
+
+      <div class="home-content">
+        <Nav />
+        <main id="main">
+          <!-- hero -->
+          <section class="hero">
+            <div class="hero-main">
+              <p class="eyebrow hero-eyebrow">{n('hero')} / {c.heroEyebrow}</p>
+              <h1 class="hero-h">
+                {c.heroHeading}
+                <span class="mark">{c.heroHighlight}</span>
+              </h1>
+              <div class="hero-actions">
+                <ApplyCta label={c.ctaPrimary} variant="primary" />
+                <a href="/team" class="btn btn-ghost">{c.ctaSecondary}</a>
+              </div>
+            </div>
+            <div class="hero-aside">
+              <p class="prose hero-intro">{c.heroIntro}</p>
+            </div>
+          </section>
+
+          <!-- optional hero photograph (renders only once one is set) -->
+          <PhotoSlot
+            src={c.heroPhoto}
+            alt={c.heroPhotoAlt}
+            ratio="21 / 9"
+            class="hero-photo"
+          />
+
+          <!-- stats -->
+          <section class="stats">
+            <p class="eyebrow">{n('stats')} / {c.statsEyebrow}</p>
+            <div class="stat-big">
+              <div class="stat-big-num">{stats.projectsCompleted}</div>
+              <div class="stat-big-label">{c.statBigLabel}</div>
+            </div>
+            <div class="stats-small">
+              <div class="stat-s">
+                <span class="stat-s-v">{stats.industriesServed}</span>
+                <span class="stat-s-l">{c.statIndustriesLabel}</span>
+              </div>
+              <div class="stat-s">
+                <span class="stat-s-v">{stats.activeMembers}</span>
+                <span class="stat-s-l">{c.statMembersLabel}</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- clients (only ever the cleared ones; see clients.yaml) -->
+          {
+            showClients && (
+              <section class="clients-section">
+                <p class="eyebrow">
+                  {n('clients')} / {c.clientsLabel}
+                </p>
+                <h2 class="clients-h">{c.clientsHeading}</h2>
+                <p class="clients-sub prose">{c.clientsSub}</p>
+                <ClientStrip clients={clients} bands="featured" />
+              </section>
+            )
+          }
+
+          <!-- why nova -->
+          <section class="why">
+            <p class="eyebrow">{n('why')} / {c.diffEyebrow}</p>
+            <div class="why-grid">
+              {
+                (c.differentiators as Differentiator[]).map((d, i) => (
+                  <div class="why-item">
+                    <span class="why-n">{String(i + 1).padStart(2, '0')}</span>
+                    <h2 class="why-title">{d.title}</h2>
+                    <p class="why-body prose">{d.body}</p>
+                  </div>
+                ))
+              }
+            </div>
+          </section>
+
+          <!-- voices (hidden until a consented quote exists) -->
+          {
+            voices.length > 0 && (
+              <section class="voices-section">
+                <p class="eyebrow">
+                  {n('voices')} / {c.voicesEyebrow}
+                </p>
+                <Voices entries={voices} />
+              </section>
+            )
+          }
+
+          <!-- recruitment timeline -->
+          <section class="tl">
+            <p class="eyebrow tl-eyebrow">
+              {n('recruitment')} / {c.timelineEyebrow}
+            </p>
+            <div class="tl-top">
+              <h2 class="tl-h">{c.timelineHeading}</h2>
+              <a href="/join" class="tl-link">{c.timelineLink}</a>
+            </div>
+            <p class="tl-note">{c.timelineNote}</p>
+            {
+              stages.map((s) => (
+                <div class="tl-line" data-status={s.status}>
+                  <span class="tl-line-name">
+                    <span class="tl-line-n">{s.n}</span> {s.name}
+                  </span>
+                  <span class="tl-line-date">
+                    {s.date.trim() === '' ? 'TBA' : s.date}
+                  </span>
+                </div>
+              ))
+            }
+          </section>
+        </main>
+        <Footer />
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .home {
+    width: 100%;
+    max-width: 1320px;
+    margin: 0 auto;
+    background: var(--bg);
+    border-inline: var(--hairline) solid var(--rule);
+  }
+  .home-grid {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+  }
+  .home-content {
+    min-width: 0;
+    border-left: var(--hairline) solid var(--rule);
+  }
+
+  /* Persistent rail */
+  .home-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+  .rail-nums {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  .home-rail .rail-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    letter-spacing: 0.24em;
+    color: var(--client);
+    white-space: nowrap;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 24px 18px 30px;
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+  .hero-eyebrow {
+    margin-bottom: 16px;
+  }
+  .hero-h {
+    font-size: 54px;
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+  }
+  .hero-intro {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-top: 22px;
+  }
+  .hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .hero-actions :global(.apply),
+  .hero-actions .btn {
+    width: 100%;
+  }
+  .home-content :global(.hero-photo) {
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+
+  /* Stats */
+  .stats {
+    padding: 20px 18px 24px;
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+  .stat-big-num {
+    font-family: var(--font-display);
+    font-size: 118px;
+    line-height: 0.82;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+    margin: 12px 0 4px;
+  }
+  .stat-big-label {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .stats-small {
+    display: flex;
+    gap: 28px;
+    margin-top: 18px;
+    border-top: 1px solid var(--rule-soft);
+    padding-top: 14px;
+  }
+  .stat-s-v {
+    font-family: var(--font-display);
+    font-size: 26px;
+  }
+  .stat-s-l {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-left: 8px;
+  }
+
+  /* Why Nova */
+  .why {
+    padding: 20px 18px 26px;
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+  .why .eyebrow {
+    margin-bottom: 18px;
+  }
+  .why-grid {
+    display: grid;
+    gap: 22px;
+  }
+  .why-n {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--client);
+  }
+  .why-title {
+    font-size: 22px;
+    line-height: 1.05;
+    text-transform: uppercase;
+    margin: 8px 0 0;
+  }
+  .why-body {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 10px 0 0;
+  }
+
+  /* Voices */
+  .voices-section {
+    padding: 20px 18px 26px;
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+  .voices-section .eyebrow {
+    margin-bottom: 16px;
+  }
+
+  /* Timeline */
+  .tl {
+    padding: 4px 0 0;
+  }
+  .tl-eyebrow {
+    padding: 20px 18px 0;
+    margin: 0;
+  }
+  .tl-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    padding: 12px 18px 4px;
+  }
+  .tl-h {
+    font-size: 26px;
+    text-transform: uppercase;
+  }
+  .tl-link {
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .tl-note {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: 0 18px 14px;
+    margin: 0;
+  }
+  .tl-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    padding: 11px 18px;
+    border-top: var(--hairline) solid var(--rule);
+    font-family: var(--font-display);
+    font-size: 15px;
+    text-transform: uppercase;
+  }
+  .tl-line-n {
+    color: var(--client);
+  }
+  .tl-line-date {
+    flex: 0 0 auto;
+    color: var(--yellow);
+    background: var(--yellow-ink);
+    padding: 3px 8px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+  /* Date not confirmed yet: stated plainly, not dressed up as news. */
+  .tl-line[data-status='tba'] .tl-line-date {
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--rule-soft);
+    letter-spacing: 0.12em;
+  }
+  .tl-line[data-status='done'] {
+    opacity: 0.55;
+  }
+
+  /* Clients — the flagship credibility block, so it gets real room. */
+  .clients-section {
+    padding: 26px 18px 30px;
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+  .clients-section .eyebrow {
+    margin-bottom: 10px;
+  }
+  .clients-h {
+    font-size: 34px;
+    line-height: 0.95;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .clients-sub {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 12px 0 22px;
+    max-width: 52ch;
+  }
+
+  /* ---- Desktop ---- */
+  @media (min-width: 900px) {
+    .home-grid {
+      grid-template-columns: 88px 1fr;
+    }
+    .home-rail {
+      padding: 24px 0;
+      font-size: 13px;
+    }
+    .home-rail .rail-label {
+      letter-spacing: 0.3em;
+    }
+    .rail-nums {
+      gap: 40px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      padding: 0;
+    }
+    .hero-main {
+      padding: 52px 40px 56px;
+      border-right: var(--hairline) solid var(--rule);
+    }
+    .hero-aside {
+      padding: 52px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .hero-h {
+      font-size: 104px;
+      line-height: 0.85;
+      letter-spacing: -0.02em;
+    }
+    .hero-intro {
+      margin-top: 0;
+      font-size: 17px;
+    }
+    .hero-actions {
+      flex-direction: row;
+      gap: 14px;
+      margin-top: 40px;
+    }
+    .hero-actions :global(.apply),
+    .hero-actions .btn {
+      width: auto;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      column-gap: 24px;
+      padding: 36px 40px 40px;
+    }
+    .stats .eyebrow {
+      display: none;
+    }
+    .stat-big {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+    }
+    .stat-big-num {
+      font-size: 180px;
+      margin: 0;
+    }
+    .stat-big-label {
+      font-size: 14px;
+      padding-bottom: 20px;
+    }
+    .stats-small {
+      flex-direction: column;
+      gap: 8px;
+      border-top: 0;
+      margin: 0;
+      padding: 0 0 18px;
+      text-align: right;
+    }
+
+    .why {
+      padding: 30px 40px 40px;
+    }
+    .why-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .why-title {
+      font-size: 26px;
+    }
+
+    .voices-section {
+      padding: 30px 40px 40px;
+    }
+
+    .clients-section {
+      padding: 44px 40px 52px;
+    }
+    .clients-h {
+      font-size: 56px;
+    }
+    .clients-sub {
+      font-size: 15px;
+      margin: 14px 0 30px;
+    }
+
+    .tl-eyebrow {
+      padding: 30px 40px 0;
+    }
+    .tl-top {
+      padding: 14px 40px 6px;
+    }
+    .tl-note {
+      padding: 0 40px 18px;
+      font-size: 12px;
+    }
+    .tl-h {
+      font-size: 34px;
+    }
+    .tl-line {
+      padding: 16px 40px;
+      font-size: 20px;
+    }
+  }
+</style>

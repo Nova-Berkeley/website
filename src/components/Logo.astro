@@ -1,0 +1,35 @@
+---
+/*
+ * Brand logo with automatic light/dark swap — no JavaScript.
+ * The white lockup shows by default (dark, canonical). Visitors in light
+ * mode get the blue lockup via the <source media> query. The two brand
+ * assets are different shapes, so we constrain height and let width flow.
+ */
+interface Props {
+  height?: number;
+  loading?: 'eager' | 'lazy';
+  class?: string;
+}
+const { height = 18, loading = 'eager', class: cls } = Astro.props;
+---
+
+<picture class:list={['logo', cls]}>
+  <source srcset="/logo-blue.png" media="(prefers-color-scheme: light)" />
+  <img
+    src="/logo-white.png"
+    alt="Nova Consulting"
+    loading={loading}
+    decoding="async"
+    style={`height:${height}px`}
+  />
+</picture>
+
+<style>
+  .logo {
+    display: block;
+  }
+  .logo img {
+    width: auto;
+    display: block;
+  }
+</style>

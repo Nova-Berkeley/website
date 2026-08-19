@@ -1,0 +1,32 @@
+# ────────────────────────────────────────────────────────────────
+#  CLIENT NAMING CLEARANCE — TEMPLATE
+# ────────────────────────────────────────────────────────────────
+#  Copy this file to `clearance.yaml` in the same folder and fill it in.
+#  `clearance.yaml` is gitignored and never published.
+#
+#  One entry per client, keyed by the same `id` used in
+#  src/content/data/clients.yaml.
+#
+#    id        Must match the id in clients.yaml.
+#    cleared   Mirrors the flag in clients.yaml. Keep the two in step.
+#    by        Who confirmed it. Name and role.
+#    on        YYYY-MM-DD.
+#    basis     How it was confirmed. A signed contract clause, an email
+#              from the client, a public source such as a club flyer, or
+#              a board decision.
+#    notes     Anything a future board would need if the name is queried.
+# ────────────────────────────────────────────────────────────────
+
+- id: example-client
+  cleared: true
+  by: Jane Doe, External VP
+  on: '2027-01-15'
+  basis: Engagement contract §7 permits public naming.
+  notes: Contract PDF is in the shared drive under Clients/2027.
+
+- id: another-client
+  cleared: false
+  by: ''
+  on: ''
+  basis: ''
+  notes: Waiting on a reply from their comms team. Do not publish yet.

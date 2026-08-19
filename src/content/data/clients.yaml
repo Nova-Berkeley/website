@@ -1,0 +1,111 @@
+# ────────────────────────────────────────────────────────────────
+#  CLIENTS
+# ────────────────────────────────────────────────────────────────
+#  Only entries with `cleared: true` are shown on the site. Anything
+#  else stays in this file as a record and reaches no page: no logo, no
+#  name, not even a count.
+#
+#  `cleared: true` means the board has confirmed we may name that client
+#  publicly. Set it back to false and the client leaves the site on the
+#  next build.
+#
+#  Fields:
+#    name      Company name as it should read.
+#    cleared   true = publishable. false = on file only, not rendered.
+#    featured  true = appears in the large top row, and is the set the
+#              homepage shows on its own. The rest fall into the denser
+#              band that runs underneath it on the work page.
+#    logo      (optional) path under /public, e.g. "/clients/nasa.svg".
+#              A cleared client with no logo file renders as a name
+#              tile instead, so a missing file never breaks the grid.
+#
+#  How the whole section is switched: `clientDisplay` in src/config.ts
+#    'logos'  full-colour logo tiles (name tile where no logo exists)
+#    'names'  names only, no logo files needed
+#    'off'    the section does not render at all
+# ────────────────────────────────────────────────────────────────
+
+# ---- Featured row ----
+- id: nasa
+  name: NASA
+  cleared: true
+  featured: true
+  logo: /clients/nasa.svg
+  order: 1
+
+- id: coca-cola
+  name: Coca-Cola
+  cleared: true
+  featured: true
+  logo: /clients/coca-cola.svg
+  order: 2
+
+- id: mcdonalds
+  name: McDonald's
+  cleared: true
+  featured: true
+  logo: /clients/mcdonalds.svg
+  order: 3
+
+- id: fifa
+  name: FIFA
+  cleared: true
+  featured: true
+  logo: /clients/fifa.svg
+  order: 4
+
+- id: wells-fargo
+  name: Wells Fargo
+  cleared: true
+  featured: true
+  logo: /clients/wells-fargo.svg
+  order: 5
+
+- id: zoom
+  name: Zoom
+  cleared: true
+  featured: true
+  logo: /clients/zoom.svg
+  order: 6
+
+# ---- Second row ----
+- id: oracle
+  name: Oracle
+  cleared: true
+  logo: /clients/oracle.svg
+  order: 10
+
+- id: att
+  name: AT&T
+  cleared: true
+  logo: /clients/att.svg
+  order: 12
+
+- id: nbc
+  name: NBC
+  cleared: true
+  logo: /clients/nbc.svg
+  order: 13
+
+- id: epic-games
+  name: Epic Games
+  cleared: true
+  logo: /clients/epic-games.svg
+  order: 14
+
+- id: aston-martin
+  name: Aston Martin
+  cleared: true
+  logo: /clients/aston-martin.svg
+  order: 15
+
+- id: conde-nast
+  name: Condé Nast
+  cleared: true
+  logo: /clients/conde-nast.svg
+  order: 16
+
+- id: equinox
+  name: Equinox
+  cleared: true
+  order: 17

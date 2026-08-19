@@ -1,0 +1,109 @@
+---
+/*
+ * The one and only "apply" button.
+ *
+ * While there is no live application — `applicationsOpen` is false, or
+ * `applyUrl` is UNSET in src/config.ts — this renders a non-clickable
+ * chip reading "Applications open soon" rather than a button that goes
+ * nowhere. Set both and every instance on the site goes live at once.
+ */
+import { applyUrl, applyLive } from '../config';
+
+interface Props {
+  label: string;
+  /** yellow = brand button · primary = blue · ink = for use ON yellow · outline */
+  variant?: 'yellow' | 'primary' | 'ink' | 'outline';
+  block?: boolean;
+  /** Shown in place of the button while applications are not live. */
+  closedLabel?: string;
+  class?: string;
+}
+const {
+  label,
+  variant = 'yellow',
+  block = false,
+  closedLabel = 'Applications open soon',
+  class: cls,
+} = Astro.props;
+---
+
+{
+  applyLive ? (
+    <a href={applyUrl} class:list={['apply', `v-${variant}`, { block }, cls]}>
+      {label}
+    </a>
+  ) : (
+    <span
+      class:list={[
+        'apply',
+        'is-closed',
+        { block, 'on-yellow': variant === 'ink' },
+        cls,
+      ]}
+    >
+      {closedLabel}
+    </span>
+  )
+}
+
+<style>
+  .apply {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 15px 28px;
+    border: var(--hairline) solid transparent;
+    transition: filter 0.15s ease;
+  }
+  a.apply:hover {
+    filter: brightness(1.08);
+  }
+  .apply.block {
+    display: block;
+    width: 100%;
+  }
+  .v-yellow {
+    background: var(--yellow);
+    color: var(--yellow-ink);
+  }
+  .v-yellow:hover {
+    color: var(--yellow-ink);
+  }
+  .v-primary {
+    background: var(--btn);
+    color: var(--btn-ink);
+  }
+  .v-primary:hover {
+    color: var(--btn-ink);
+  }
+  .v-ink {
+    background: var(--yellow-ink);
+    color: var(--yellow);
+  }
+  .v-ink:hover {
+    color: var(--yellow);
+  }
+  .v-outline {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .v-outline:hover {
+    color: var(--accent);
+  }
+  /* Not-yet-open state: reads as a status, not a dead button. */
+  .is-closed {
+    border-color: var(--rule);
+    color: var(--accent);
+    background: transparent;
+    cursor: default;
+  }
+  /* Same chip sitting on a yellow section. */
+  .is-closed.on-yellow {
+    border-color: var(--yellow-ink);
+    color: var(--yellow-ink);
+    opacity: 0.75;
+  }
+</style>

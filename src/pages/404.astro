@@ -1,0 +1,86 @@
+---
+import InnerLayout from '../layouts/InnerLayout.astro';
+import Section from '../components/Section.astro';
+
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/projects', label: 'Our work' },
+  { href: '/team', label: 'The team' },
+  { href: '/join', label: 'Join Nova' },
+  { href: '/coffee-chats', label: 'Coffee chats' },
+];
+---
+
+<InnerLayout
+  title="Page not found · Nova Consulting · UC Berkeley"
+  description="That page doesn't exist. Find your way back to Nova Consulting, UC Berkeley's student-run strategy consulting club."
+  railLabel="LOST · 404"
+  railBottom="02"
+>
+  <Section n="01" eyebrow="Page not found" noRule>
+    <h1 class="nf-title">404</h1>
+    <p class="nf-body prose">
+      That page does not exist. It may have moved, or the link was
+      mistyped.
+    </p>
+  </Section>
+
+  <Section n="02" eyebrow="Go somewhere useful">
+    <ul class="nf-links">
+      {
+        links.map((l) => (
+          <li>
+            <a href={l.href}>
+              <span class="nf-arrow" aria-hidden="true">→</span> {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+</InnerLayout>
+
+<style>
+  .nf-title {
+    font-size: 96px;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+  }
+  .nf-body {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-top: 16px;
+    max-width: 40ch;
+  }
+  .nf-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nf-links li {
+    border-top: 1px solid var(--rule-soft);
+  }
+  .nf-links li:first-child {
+    border-top: 0;
+  }
+  .nf-links a {
+    display: block;
+    padding: 14px 0;
+    font-family: var(--font-display);
+    font-size: 20px;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .nf-links a:hover {
+    color: var(--accent);
+  }
+  .nf-arrow {
+    color: var(--accent);
+  }
+  @media (min-width: 720px) {
+    .nf-title {
+      font-size: 140px;
+    }
+  }
+</style>

@@ -1,0 +1,195 @@
+---
+/*
+ * Recruitment timeline (Join page).
+ *
+ * Each stage is a hairline row with a left marker. The highlighted stage
+ * ("Happening now" today, otherwise "Next up") is worked out from the
+ * current date in Berkeley (see src/lib/schedule.ts), not from a flag in
+ * the YAML that someone has to remember to move. Stages already past are
+ * dimmed; stages with no date yet read "TBA" and are never highlighted.
+ *
+ * The status is computed at build time AND re-checked in the browser, so
+ * a page built a week ago still highlights the right stage today.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { berkeleyToday, statuses, STATUS_NOTE } from '../lib/schedule';
+
+interface Props {
+  stages: CollectionEntry<'timeline'>[];
+}
+const { stages } = Astro.props;
+
+const today = berkeleyToday();
+const status = statuses(
+  stages.map((s) => s.data.on),
+  today
+);
+
+const rows = stages.map((s, i) => ({
+  ...s.data,
+  status: status[i],
+  note: STATUS_NOTE[status[i]] ?? '',
+  meta: [s.data.time, s.data.location].filter(Boolean).join(' · '),
+}));
+---
+
+<div class="timeline" data-timeline>
+  {
+    rows.map((s) => (
+      <div class="tl-row" data-on={s.on} data-status={s.status}>
+        <div class="tl-marker" aria-hidden="true" />
+        <div class="tl-body">
+          <div class="tl-head">
+            <h3 class="tl-name">
+              <span class="tl-n">{s.n}</span> {s.name}
+            </h3>
+            <span class="tl-date">{s.date.trim() === '' ? 'TBA' : s.date}</span>
+          </div>
+          {s.meta && <p class="tl-meta">{s.meta}</p>}
+          <p class="tl-desc prose">{s.desc}</p>
+          {s.pending && (
+            <span class="tl-pending" title={s.pending}>
+              ◇ {s.pending}
+            </span>
+          )}
+          <span class="tl-now" data-note>
+            {s.note}
+          </span>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  import { berkeleyToday, statuses, STATUS_NOTE } from '../lib/schedule';
+
+  /* Re-run the same rules client-side so a stale build still highlights
+     the right stage. Falls back silently to the built-in state. */
+  document.querySelectorAll<HTMLElement>('[data-timeline]').forEach((tl) => {
+    const rows = Array.from(
+      tl.querySelectorAll<HTMLElement>('.tl-row')
+    );
+    const fresh = statuses(
+      rows.map((r) => r.dataset.on ?? ''),
+      berkeleyToday()
+    );
+    rows.forEach((row, i) => {
+      row.dataset.status = fresh[i];
+      const note = row.querySelector<HTMLElement>('[data-note]');
+      if (note) note.textContent = STATUS_NOTE[fresh[i]] ?? '';
+    });
+  });
+</script>
+
+<style>
+  .tl-row {
+    display: grid;
+    grid-template-columns: 4px 1fr;
+    border-top: var(--hairline) solid var(--rule);
+  }
+  .tl-marker {
+    background: transparent;
+  }
+  .tl-row[data-status='now'] .tl-marker,
+  .tl-row[data-status='next'] .tl-marker {
+    background: var(--yellow);
+  }
+  .tl-body {
+    padding: 14px 16px;
+  }
+  /* Stages already behind us stay readable but stop competing. */
+  .tl-row[data-status='done'] .tl-body {
+    opacity: 0.55;
+  }
+  .tl-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .tl-name {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+  .tl-n {
+    color: var(--client);
+  }
+  .tl-date {
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .tl-row[data-status='tba'] .tl-date {
+    color: var(--dim);
+    letter-spacing: 0.12em;
+  }
+  .tl-row[data-status='now'] .tl-date,
+  .tl-row[data-status='next'] .tl-date {
+    background: var(--yellow);
+    color: var(--yellow-ink);
+    padding: 4px 8px;
+  }
+  .tl-meta {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--client);
+    margin: 7px 0 0;
+  }
+  .tl-desc {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    margin: 7px 0 0;
+  }
+  /* A detail that is not settled yet, stated rather than hidden. */
+  .tl-pending {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    border: 1px solid var(--rule-soft);
+    padding: 3px 7px;
+    margin-top: 9px;
+  }
+  .tl-now {
+    /* accent (not yellow) so it stays legible in light mode too */
+    display: block;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .tl-now:empty {
+    display: none;
+  }
+  .tl-now::before {
+    content: '● ';
+  }
+  .tl-row[data-status='now'] .tl-now,
+  .tl-row[data-status='next'] .tl-now {
+    margin-top: 8px;
+  }
+  @media (min-width: 720px) {
+    .tl-body {
+      padding: 18px 28px;
+    }
+    .tl-name {
+      font-size: 20px;
+    }
+    .tl-date {
+      font-size: 14px;
+    }
+    .tl-desc {
+      font-size: 13px;
+    }
+  }
+</style>

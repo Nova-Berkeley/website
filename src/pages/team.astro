@@ -1,0 +1,164 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import InnerLayout from '../layouts/InnerLayout.astro';
+import Section from '../components/Section.astro';
+import TeamCard from '../components/TeamCard.astro';
+import ApplyCta from '../components/ApplyCta.astro';
+import { stats } from '../config';
+
+const page = await getEntry('pages', 'team');
+const c = page.data.copy;
+
+const roster = (await getCollection('team')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+const leaders = roster.filter((p) => p.data.tier === 'leadership');
+const pms = roster.filter((p) => p.data.tier === 'pm');
+
+/* Alumni placements are hidden entirely until alumni.yaml has entries.
+   No placeholder list of firms stands in for the real one. */
+const alumni = (await getCollection('alumni')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+
+const sections = [
+  'hero',
+  'leadership',
+  ...(pms.length > 0 ? ['pms'] : []),
+  ...(alumni.length > 0 ? ['alumni'] : []),
+  'cta',
+];
+const n = (key: string) => String(sections.indexOf(key) + 1).padStart(2, '0');
+const last = String(sections.length).padStart(2, '0');
+---
+
+<InnerLayout
+  title={page.data.title}
+  description={page.data.description}
+  railLabel={c.railLabel}
+  railBottom={last}
+>
+  <!-- hero -->
+  <Section n={n('hero')} eyebrow={c.heroEyebrow} noRule>
+    <h1 class="hero-title">{c.heading}</h1>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-value">{stats.activeMembers}</div>
+        <div class="stat-label">{c.statMembersLabel}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{leaders.length}</div>
+        <div class="stat-label">{c.statBoardLabel}</div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- the board -->
+  <Section n={n('leadership')} eyebrow={c.leadershipEyebrow}>
+    <div class="grid grid-leaders">
+      {leaders.map((p) => <TeamCard person={p.data} layout="leader" />)}
+    </div>
+  </Section>
+
+  <!-- project managers (hidden until any are listed in team.yaml) -->
+  {
+    pms.length > 0 && (
+      <Section n={n('pms')} eyebrow={c.membersEyebrow}>
+        <div class="grid grid-leaders">
+          {pms.map((p) => (
+            <TeamCard person={p.data} layout="leader" />
+          ))}
+        </div>
+      </Section>
+    )
+  }
+
+  <!-- alumni (hidden until alumni.yaml has entries) -->
+  {
+    alumni.length > 0 && (
+      <Section n={n('alumni')} eyebrow={c.alumniEyebrow}>
+        <div class="alumni">
+          {alumni.map((a) => (
+            <span class="alumni-name">{a.data.company}</span>
+          ))}
+        </div>
+      </Section>
+    )
+  }
+
+  <!-- CTA -->
+  <Section n={n('cta')} eyebrow={c.ctaEyebrow} variant="yellow" center>
+    <h2 class="cta-title">{c.cta.heading}</h2>
+    <ApplyCta label={c.cta.button} variant="ink" />
+  </Section>
+</InnerLayout>
+
+<style>
+  .hero-title {
+    font-size: 54px;
+    line-height: 0.9;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 28px;
+    margin-top: 20px;
+    border-top: 1px solid var(--rule-soft);
+    padding-top: 16px;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 40px;
+    line-height: 0.9;
+  }
+  .stat-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .grid {
+    display: grid;
+    gap: 12px;
+  }
+  .grid-leaders {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .alumni {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 20px;
+  }
+  .alumni-name {
+    font-family: var(--font-display);
+    font-size: 26px;
+    color: var(--client);
+    text-transform: uppercase;
+    line-height: 1.15;
+  }
+
+  .cta-title {
+    font-size: 38px;
+    line-height: 0.95;
+    margin-bottom: 18px;
+  }
+
+  @media (min-width: 720px) {
+    .hero-title {
+      font-size: 72px;
+    }
+    .grid-leaders {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .alumni-name {
+      font-size: 34px;
+    }
+    .cta-title {
+      font-size: 52px;
+    }
+  }
+</style>

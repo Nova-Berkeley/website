@@ -1,0 +1,111 @@
+---
+/*
+ * SEO head tags: title, description, canonical, Open Graph, Twitter, and
+ * a site-wide JSON-LD Organization block. Driven by per-page frontmatter
+ * (src/content/pages/*.md) and src/config.ts.
+ */
+import { site, social, isSet, ogImage as defaultOgImage } from '../config';
+import { getCollection } from 'astro:content';
+import { fillCopy } from '../lib/copy';
+import { clientDisplay } from '../config';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+}
+
+const {
+  title: rawTitle,
+  description: rawDescription,
+  ogImage = defaultOgImage,
+} = Astro.props;
+
+/* Page copy may quote the club's numbers as {activeMembers} etc., and
+   name cleared clients as {clients}. Both are resolved here so every
+   page's <title>, description and social cards stay in step with the
+   data — and so an uncleared client can never leak into a meta tag. */
+const cleared =
+  clientDisplay === 'off'
+    ? []
+    : (await getCollection('clients'))
+        .filter((c) => c.data.cleared)
+        .sort((a, b) => a.data.order - b.data.order);
+
+const clients = cleared.map((c) => c.data.name);
+const clientsFeatured = cleared
+  .filter((c) => c.data.featured)
+  .map((c) => c.data.name);
+
+const title = fillCopy(rawTitle, { clients, clientsFeatured });
+const description = fillCopy(rawDescription, { clients, clientsFeatured });
+
+// Canonical + absolute OG URL, resolved against `site` in astro.config.mjs.
+const canonicalURL = new URL(Astro.url.pathname, Astro.site).href;
+const ogImageURL = new URL(ogImage, Astro.site).href;
+
+// Structured data mirrors the site: anything UNSET in src/config.ts is
+// left out of the schema entirely rather than guessed at.
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': ['Organization', 'EducationalOrganization'],
+  name: site.name,
+  alternateName: site.legalName,
+  url: site.url,
+  ...(isSet(site.email) ? { email: site.email } : {}),
+  logo: new URL('/logo-blue.png', Astro.site).href,
+  foundingDate: String(site.foundedYear),
+  description:
+    'Student-run strategy consulting club at UC Berkeley, working with organizations that need strategic, data-driven analysis.',
+  parentOrganization: {
+    '@type': 'CollegeOrUniversity',
+    name: 'University of California, Berkeley',
+  },
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: site.city,
+    addressRegion: site.region,
+    addressCountry: site.country,
+  },
+  sameAs: [social.instagram, social.linkedin].filter(isSet),
+};
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Dark is canonical; the browser UI follows the OS just like the page. -->
+<meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#141f42" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#fafbfd" media="(prefers-color-scheme: light)" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={ogImageURL} />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageURL} />
+
+<!-- Favicons -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<script
+  type="application/ld+json"
+  set:html={JSON.stringify(orgSchema)}
+/>

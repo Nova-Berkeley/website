@@ -1,0 +1,198 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import InnerLayout from '../layouts/InnerLayout.astro';
+import Section from '../components/Section.astro';
+import TeamCard from '../components/TeamCard.astro';
+import Faq from '../components/Faq.astro';
+import BookingEmbed from '../components/BookingEmbed.astro';
+import EmptyState from '../components/EmptyState.astro';
+import PhotoSlot from '../components/PhotoSlot.astro';
+import ApplyCta from '../components/ApplyCta.astro';
+
+const page = await getEntry('pages', 'coffee-chats');
+const c = page.data.copy;
+
+const roster = (await getCollection('team')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+const available = roster.filter((p) => p.data.coffeeChat);
+const urm = roster.filter((p) => p.data.urm);
+
+const faqEntries = (await getCollection('faq'))
+  .filter((f) => f.data.category === 'coffee-chats')
+  .sort((a, b) => a.data.order - b.data.order);
+
+/* The availability grid and the URM section are driven by the
+   `coffeeChat` and `urm` flags in team.yaml. While no one is flagged,
+   the grid shows a short note in place of the list and the URM section
+   is left out. Set the flags and both appear. */
+const sections = [
+  'hero',
+  'available',
+  ...(urm.length > 0 ? ['urm'] : []),
+  'book',
+  'faq',
+  'cta',
+];
+const n = (key: string) => String(sections.indexOf(key) + 1).padStart(2, '0');
+const last = String(sections.length).padStart(2, '0');
+---
+
+<InnerLayout
+  title={page.data.title}
+  description={page.data.description}
+  railLabel={c.railLabel}
+  railBottom={last}
+>
+  <!-- hero -->
+  <Section n={n('hero')} eyebrow={c.heroEyebrow} noRule>
+    <h1 class="hero-title">{c.heading}</h1>
+    <p class="hero-intro prose">{c.intro}</p>
+    <p class="hero-note prose">{c.note}</p>
+  </Section>
+
+  <!-- optional hero photograph (renders only once one is set) -->
+  <PhotoSlot
+    src={c.heroPhoto}
+    alt={c.heroPhotoAlt}
+    ratio="21 / 9"
+    class="hero-photo"
+  />
+
+  <!-- who's available -->
+  <Section n={n('available')} eyebrow={c.availEyebrow}>
+    {
+      available.length > 0 ? (
+        <>
+          <p class="sub-note">{c.availNote}</p>
+          <div class="grid-avail">
+            {available.map((p) => (
+              <TeamCard person={p.data} layout="coffee" />
+            ))}
+          </div>
+        </>
+      ) : (
+        <EmptyState heading={c.availEmptyHeading} body={c.availEmpty} />
+      )
+    }
+  </Section>
+
+  <!-- URM coffee chats -->
+  {
+    urm.length > 0 && (
+      <Section n={n('urm')} eyebrow={c.urmEyebrow}>
+        <div class="urm-panel">
+          <h2 class="urm-title">{c.urm.heading}</h2>
+          <p class="urm-body prose">{c.urm.body}</p>
+          <div class="grid-urm">
+            {urm.map((p) => (
+              <TeamCard person={p.data} layout="urm" />
+            ))}
+          </div>
+        </div>
+      </Section>
+    )
+  }
+
+  <!-- book your slot -->
+  <Section id="book" n={n('book')} eyebrow={c.bookEyebrow}>
+    <p class="sub-note">{c.bookNote}</p>
+    <BookingEmbed
+      loadingText={c.bookLoading}
+      unsetHeading={c.bookUnset.heading}
+      unsetBody={c.bookUnset.body}
+    />
+  </Section>
+
+  <!-- FAQ -->
+  <Section n={n('faq')} eyebrow={c.faqEyebrow} class="faq-section">
+    <Faq entries={faqEntries} />
+  </Section>
+
+  <!-- apply CTA -->
+  <Section id="apply" n={n('cta')} eyebrow={c.finalCtaEyebrow} variant="yellow" center>
+    <h2 class="cta-title">{c.finalCta.heading}</h2>
+    <ApplyCta label={c.finalCta.button} variant="ink" />
+  </Section>
+</InnerLayout>
+
+<style>
+  .hero-title {
+    font-size: 50px;
+    line-height: 0.9;
+  }
+  .hero-intro {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin-top: 16px;
+  }
+  .hero-note {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--accent);
+    margin-top: 12px;
+  }
+  :global(.hero-photo) {
+    border-top: var(--hairline) solid var(--rule);
+  }
+  .sub-note {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--client);
+    text-transform: uppercase;
+    margin: 0 0 14px;
+  }
+  .grid-avail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .urm-panel {
+    border: var(--hairline) solid var(--rule);
+    background: var(--panel);
+    padding: 18px 16px;
+  }
+  .urm-title {
+    font-size: 22px;
+    line-height: 1.05;
+  }
+  .urm-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 10px 0 18px;
+  }
+  .grid-urm {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* FAQ rows manage their own top rules, so drop the section eyebrow gap. */
+  .faq-section :global(.section-eyebrow) {
+    margin-bottom: 0;
+  }
+
+  .cta-title {
+    font-size: 38px;
+    line-height: 0.95;
+    margin-bottom: 18px;
+  }
+
+  @media (min-width: 720px) {
+    .hero-title {
+      font-size: 66px;
+    }
+    .grid-avail {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .grid-urm {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .cta-title {
+      font-size: 52px;
+    }
+  }
+</style>

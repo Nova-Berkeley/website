@@ -1,0 +1,82 @@
+---
+/*
+ * A numbered content section: hairline top rule + an "NN / eyebrow"
+ * label, then whatever you slot in. Variants cover the panel and yellow
+ * background moments from the comps.
+ */
+interface Props {
+  n?: string;
+  eyebrow?: string;
+  id?: string;
+  variant?: 'default' | 'panel' | 'yellow';
+  noRule?: boolean;
+  center?: boolean;
+  class?: string;
+}
+const {
+  n,
+  eyebrow,
+  id,
+  variant = 'default',
+  noRule = false,
+  center = false,
+  class: cls,
+} = Astro.props;
+---
+
+<section
+  id={id}
+  class:list={[
+    'section',
+    `is-${variant}`,
+    { 'no-rule': noRule, center },
+    cls,
+  ]}
+>
+  {
+    (n || eyebrow) && (
+      <p class="section-eyebrow">
+        {n && <span class="section-n">{n}</span>}
+        {n && eyebrow && <span class="section-sep"> / </span>}
+        {eyebrow}
+      </p>
+    )
+  }
+  <slot />
+</section>
+
+<style>
+  .section {
+    padding: 24px 16px 26px;
+    border-top: var(--hairline) solid var(--rule);
+  }
+  .section.no-rule {
+    border-top: 0;
+  }
+  .section.center {
+    text-align: center;
+  }
+  .is-panel {
+    background: var(--panel);
+  }
+  .is-yellow {
+    background: var(--yellow);
+    color: var(--yellow-ink);
+  }
+  .section-eyebrow {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  .is-yellow .section-eyebrow {
+    color: var(--yellow-ink);
+  }
+  @media (min-width: 720px) {
+    .section {
+      padding: 30px 28px 32px;
+    }
+  }
+</style>

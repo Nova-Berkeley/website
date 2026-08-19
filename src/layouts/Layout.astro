@@ -1,0 +1,50 @@
+---
+/*
+ * Base document layout. Every page renders inside this: it owns <head>
+ * (via SEO.astro), loads the fonts + global styles, and drops the page
+ * body into the slot. Chrome like the nav/footer is composed per-page
+ * (see InnerLayout.astro) because the homepage frames them differently.
+ */
+import '@fontsource/hammersmith-one';
+import '../styles/global.css';
+import SEO from '../components/SEO.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+}
+
+const { title, description, ogImage } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <SEO title={title} description={description} ogImage={ogImage} />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <slot />
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    background: var(--yellow);
+    color: var(--yellow-ink);
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 13px;
+    padding: 12px 18px;
+  }
+  .skip-link:focus {
+    left: 8px;
+    top: 8px;
+  }
+</style>

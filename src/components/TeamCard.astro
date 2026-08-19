@@ -1,0 +1,190 @@
+---
+/*
+ * A single person card. `layout` selects the shape:
+ *   leader     — larger, with role + LinkedIn (Team page leadership)
+ *   consultant — compact square (Team page member grid)
+ *   coffee     — with a filled "Book a chat" button (Coffee Chats)
+ *   urm        — like coffee but outlined, on the base background
+ * Falls back to initials when no photo is set.
+ */
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  person: CollectionEntry<'team'>['data'];
+  layout: 'leader' | 'consultant' | 'coffee' | 'urm';
+}
+const { person, layout } = Astro.props;
+
+const initials = person.name
+  .split(/\s+/)
+  .map((w) => w[0])
+  .slice(0, 2)
+  .join('')
+  .toUpperCase();
+
+const isCoffee = layout === 'coffee' || layout === 'urm';
+const detail = isCoffee ? person.coffeeDetail ?? person.detail : person.detail;
+---
+
+<article class:list={['tcard', `l-${layout}`]}>
+  <div class="tcard-media">
+    {
+      person.photo ? (
+        <img src={person.photo} alt={person.name} loading="lazy" />
+      ) : (
+        <span class="tcard-initials" aria-hidden="true">
+          {initials}
+        </span>
+      )
+    }
+  </div>
+  <div class="tcard-body">
+    {
+      layout === 'leader' ? (
+        <>
+          <div class="tcard-head">
+            <div>
+              <h3 class="tcard-name">{person.name}</h3>
+              <p class="tcard-role">{person.role}</p>
+            </div>
+            {person.linkedin && (
+              <a
+                class="tcard-in"
+                href={person.linkedin}
+                aria-label={`${person.name} on LinkedIn`}
+              >
+                in
+              </a>
+            )}
+          </div>
+          <p class="tcard-detail prose">{person.detail}</p>
+        </>
+      ) : (
+        <>
+          <h3 class="tcard-name">{person.name}</h3>
+          <p class="tcard-detail">{detail}</p>
+          {isCoffee && (
+            <a
+              href="#book"
+              class:list={['tcard-book', layout === 'urm' ? 'outline' : 'filled']}
+            >
+              Book a chat
+            </a>
+          )}
+        </>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .tcard {
+    border: var(--hairline) solid var(--rule);
+    background: var(--panel);
+  }
+  .l-urm {
+    background: var(--bg);
+  }
+  .tcard-media {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    border-bottom: var(--hairline) solid var(--rule);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .l-consultant .tcard-media {
+    aspect-ratio: 1 / 1;
+  }
+  .tcard-media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .tcard-initials {
+    font-family: var(--font-display);
+    font-size: 40px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .l-consultant .tcard-initials {
+    font-size: 24px;
+  }
+  .tcard-body {
+    padding: 11px 12px 12px;
+  }
+  .l-leader .tcard-body {
+    padding: 12px;
+  }
+  .tcard-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .tcard-name {
+    font-size: 15px;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+  .l-leader .tcard-name {
+    font-size: 16px;
+  }
+  .tcard-role {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin: 5px 0 0;
+  }
+  .tcard-detail {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 8px 0 0;
+  }
+  .l-consultant .tcard-detail,
+  .l-coffee .tcard-detail,
+  .l-urm .tcard-detail {
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .tcard-in {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border: var(--hairline) solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--accent);
+    text-transform: lowercase;
+  }
+  .tcard-book {
+    display: block;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 12px;
+    padding: 10px;
+  }
+  .tcard-book.filled {
+    background: var(--btn);
+    color: var(--btn-ink);
+  }
+  .tcard-book.outline {
+    border: var(--hairline) solid var(--accent);
+    color: var(--accent);
+    padding: 9px;
+  }
+</style>

@@ -1,0 +1,81 @@
+---
+/*
+ * A photograph slot with the brand's navy wash over it.
+ *
+ * Honest-empty by default: with no `src` this renders NOTHING, so an
+ * unfilled slot costs the page nothing rather than showing an obviously
+ * empty grey box. Pass `placeholder` to get the diagonal stripe texture
+ * instead (used inside cards, where the slot is part of the shape).
+ *
+ * To fill one: drop the image into /public and paste its path into the
+ * matching field — page copy for hero bands, team.yaml for headshots,
+ * a project's `image` for case-study cards. Nothing else changes.
+ */
+interface Props {
+  src?: string;
+  alt?: string;
+  /** CSS aspect-ratio, e.g. "21 / 9". */
+  ratio?: string;
+  /** Navy wash over the image, so overlaid type stays legible. */
+  wash?: boolean;
+  /** Show the stripe texture when there is no image, instead of nothing. */
+  placeholder?: boolean;
+  class?: string;
+}
+const {
+  src,
+  alt = '',
+  ratio = '21 / 9',
+  wash = true,
+  placeholder = false,
+  class: cls,
+} = Astro.props;
+
+const hasPhoto = typeof src === 'string' && src.trim() !== '';
+---
+
+{
+  hasPhoto ? (
+    <div
+      class:list={['pslot', { wash }, cls]}
+      style={`--pslot-ratio:${ratio}`}
+    >
+      <img src={src} alt={alt} loading="lazy" decoding="async" />
+    </div>
+  ) : placeholder ? (
+    <div
+      class:list={['pslot', 'is-empty', 'stripe', cls]}
+      style={`--pslot-ratio:${ratio}`}
+      aria-hidden="true"
+    />
+  ) : null
+}
+
+<style>
+  .pslot {
+    position: relative;
+    aspect-ratio: var(--pslot-ratio);
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .pslot img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* The navy wash: a flat tint plus a deeper gradient at the foot, so
+     the band sits inside the page rather than punching a hole in it. */
+  .pslot.wash::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to bottom, transparent 40%, var(--overlay) 100%),
+      var(--overlay);
+  }
+  .pslot.is-empty {
+    background-color: var(--panel);
+  }
+</style>

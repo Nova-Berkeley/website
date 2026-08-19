@@ -1,0 +1,99 @@
+---
+/*
+ * Accessible FAQ accordion built on native <details>/<summary> — no
+ * JavaScript. The +/– indicator is pure CSS. Answers are the Markdown
+ * bodies of the passed-in faq collection entries.
+ */
+import { render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entries: CollectionEntry<'faq'>[];
+}
+const { entries } = Astro.props;
+
+const items = await Promise.all(
+  entries.map(async (entry) => ({
+    question: entry.data.question,
+    Content: (await render(entry)).Content,
+  }))
+);
+---
+
+<div class="faq">
+  {
+    items.map(({ question, Content }) => (
+      <details class="faq-item">
+        <summary class="faq-q">
+          <span>{question}</span>
+          <span class="faq-sign" aria-hidden="true" />
+        </summary>
+        <div class="faq-a prose">
+          <Content />
+        </div>
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .faq-item {
+    border-top: var(--hairline) solid var(--rule);
+  }
+  .faq-q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: 15px;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  .faq-q::-webkit-details-marker {
+    display: none;
+  }
+  .faq-sign {
+    position: relative;
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+  }
+  .faq-sign::before,
+  .faq-sign::after {
+    content: '';
+    position: absolute;
+    background: var(--accent);
+  }
+  .faq-sign::before {
+    left: 0;
+    right: 0;
+    top: 7px;
+    height: 2px;
+  }
+  .faq-sign::after {
+    top: 0;
+    bottom: 0;
+    left: 7px;
+    width: 2px;
+    transition: opacity 0.15s ease;
+  }
+  .faq-item[open] .faq-sign::after {
+    opacity: 0;
+  }
+  .faq-a {
+    padding: 0 16px 18px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .faq-a :global(p) {
+    margin: 0 0 0.6em;
+  }
+  .faq-a :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>
