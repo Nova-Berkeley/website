@@ -13,8 +13,8 @@ copy:
   # Optional hero photograph. Drop a file into /public (e.g.
   # "/photos/hero.jpg") and paste the path here — the band appears with
   # a navy wash over it. Left empty, no band renders at all.
-  heroPhoto: ''
-  heroPhotoAlt: ''
+  heroPhoto: '/photos/hero.jpg'
+  heroPhotoAlt: 'The Nova Consulting membership on the steps of a campus building'
   statsEyebrow: 'By the numbers'
   # The figures themselves live in src/config.ts (`stats`) so there is
   # one place to correct them. These are just their labels.

@@ -13,8 +13,8 @@ copy:
   # its path here (e.g. "/photos/coffee-hero.jpg"). It renders as a wide
   # band under the heading with a navy wash over it. Left empty, no band
   # renders at all.
-  heroPhoto: ''
-  heroPhotoAlt: ''
+  heroPhoto: '/photos/coffee-hero.jpg'
+  heroPhotoAlt: 'Six Nova members standing outdoors on campus, talking'
   availEyebrow: "Who's available"
   availNote: 'Pick anyone and book directly'
   # Shown while nobody in team.yaml has `coffeeChat: true`.
