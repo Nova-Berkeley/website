@@ -1,10 +1,27 @@
 ---
 /*
- * Sticky top navigation. Logo (auto light/dark) on the left; primary
- * links (desktop) and the single Apply CTA on the right. On mobile it
- * collapses to just the logo + Apply button, matching the comps.
+ * Sticky top navigation.
+ *
+ * Desktop (≥769px): logo, the four page links, and the single Apply CTA.
+ *
+ * Mobile (≤768px): logo and a hamburger. The links do not fit across the
+ * bar at phone widths, so they move into a full-screen overlay together
+ * with the Apply CTA.
+ *
+ * The overlay is built on <details>/<summary> rather than a script. That
+ * buys three things at once: it works with no JavaScript at all, <summary>
+ * is natively focusable and keyboard-operable, and browsers announce its
+ * expanded/collapsed state without any ARIA of ours. It is also the same
+ * idiom the FAQ accordion already uses. The one script below is a four
+ * line enhancement (Escape closes the menu); everything works without it.
+ *
+ * The overlay is anchored under the bar with `top: var(--nav-h); bottom: 0`
+ * rather than sized with viewport units, which sidesteps the 100vh problem
+ * in in-app browsers (Instagram, and any other WKWebView/Chrome WebView)
+ * where the toolbars are not counted the way a normal browser counts them.
  */
 import Logo from './Logo.astro';
+import ApplyCta from './ApplyCta.astro';
 import { applyUrl, applyLive } from '../config';
 
 const links = [
@@ -18,27 +35,29 @@ const links = [
 // status chip instead of a button that goes nowhere.
 // Normalise the current path so "/team/" and "/team" both match.
 const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isCurrent = (href: string) => current === href;
 ---
 
 <nav class="nav" aria-label="Primary">
   <a href="/" class="nav-home" aria-label="Nova Consulting, home">
     <Logo height={18} />
   </a>
+
   <div class="nav-right">
+    <!-- Desktop links -->
     <ul class="nav-links">
       {
         links.map((l) => (
           <li>
-            <a
-              href={l.href}
-              aria-current={current === l.href ? 'page' : undefined}
-            >
+            <a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>
               {l.label}
             </a>
           </li>
         ))
       }
     </ul>
+
+    <!-- Desktop Apply -->
     {
       applyLive ? (
         <a href={applyUrl} class="nav-apply">
@@ -48,19 +67,76 @@ const current = Astro.url.pathname.replace(/\/$/, '') || '/';
         <span class="nav-apply is-closed">Applications soon</span>
       )
     }
+
+    <!-- Mobile menu -->
+    <details class="nav-menu">
+      <summary class="nav-burger">
+        {/* Only one of these is rendered at a time, so the control names
+            itself correctly in both states without any script. */}
+        <span class="sr-only label-closed">Menu</span>
+        <span class="sr-only label-open">Close menu</span>
+        <span class="burger" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+      </summary>
+
+      <div class="overlay">
+        <ul class="overlay-links">
+          {
+            links.map((l) => (
+              <li>
+                <a
+                  href={l.href}
+                  aria-current={isCurrent(l.href) ? 'page' : undefined}
+                >
+                  <span class="overlay-label">{l.label}</span>
+                  {isCurrent(l.href) && (
+                    <span class="overlay-here">
+                      <span aria-hidden="true">●</span> You are here
+                    </span>
+                  )}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="overlay-cta">
+          <ApplyCta label="Apply to Nova" variant="yellow" block />
+        </div>
+      </div>
+    </details>
   </div>
 </nav>
 
+<script>
+  /* Enhancement only: Escape closes an open menu. Everything above works
+     without this file loading at all. */
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document
+      .querySelectorAll<HTMLDetailsElement>('details.nav-menu[open]')
+      .forEach((d) => {
+        d.open = false;
+        d.querySelector<HTMLElement>('summary')?.focus();
+      });
+  });
+</script>
+
 <style>
   .nav {
+    /* Fixed height rather than padding-driven, so the overlay below can
+       be positioned flush against the bar with no measuring. The 44px
+       tap target for the burger is what sets the floor. */
+    --nav-h: 64px;
     position: sticky;
     top: 0;
-    z-index: 20;
+    z-index: 40;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 13px 16px;
+    height: var(--nav-h);
+    padding: 0 16px;
     background: var(--bg);
     border-bottom: var(--hairline) solid var(--rule);
   }
@@ -92,6 +168,7 @@ const current = Astro.url.pathname.replace(/\/$/, '') || '/';
     color: var(--accent);
   }
   .nav-apply {
+    display: none;
     background: var(--yellow);
     color: var(--yellow-ink);
     font-family: var(--font-display);
@@ -111,16 +188,175 @@ const current = Astro.url.pathname.replace(/\/$/, '') || '/';
     color: var(--accent);
   }
 
-  @media (min-width: 720px) {
+  /* ---- Mobile menu ------------------------------------------------ */
+  .nav-menu {
+    display: block;
+  }
+
+  /* The burger doubles as the close control: it stays in the bar above
+     the overlay, so there is one control in one place in both states. */
+  .nav-burger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 44×44 minimum tap target, per the platform guidelines. */
+    width: 44px;
+    height: 44px;
+    margin-right: -10px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .nav-burger::-webkit-details-marker {
+    display: none;
+  }
+  .nav-burger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .burger {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 16px;
+  }
+  .burger span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--ink);
+    transition:
+      transform 0.18s ease,
+      opacity 0.12s ease,
+      top 0.18s ease;
+  }
+  .burger span:nth-child(1) {
+    top: 0;
+  }
+  .burger span:nth-child(2) {
+    top: 7px;
+  }
+  .burger span:nth-child(3) {
+    top: 14px;
+  }
+  /* Open: the bars become a cross. */
+  .nav-menu[open] .burger span:nth-child(1) {
+    top: 7px;
+    transform: rotate(45deg);
+  }
+  .nav-menu[open] .burger span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-menu[open] .burger span:nth-child(3) {
+    top: 7px;
+    transform: rotate(-45deg);
+  }
+
+  /* Which label the control carries, swapped with CSS so no script is
+     needed to keep the accessible name honest. */
+  .label-open {
+    display: none;
+  }
+  .nav-menu[open] .label-closed {
+    display: none;
+  }
+  .nav-menu[open] .label-open {
+    display: inline;
+  }
+
+  .nav-menu:not([open]) .overlay {
+    display: none;
+  }
+  .overlay {
+    position: fixed;
+    top: var(--nav-h);
+    left: 0;
+    right: 0;
+    /* Anchored to the viewport edges rather than sized in vh, so in-app
+       browser toolbars cannot crop or overshoot it. */
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 8px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+    background: var(--bg);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .overlay-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .overlay-links li + li {
+    border-top: 1px solid var(--rule-soft);
+  }
+  .overlay-links a {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    /* Generous rows: each is ~72px tall, well past a comfortable tap. */
+    padding: 22px 2px;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .overlay-links a:hover {
+    color: var(--accent);
+  }
+  .overlay-links a[aria-current='page'] {
+    color: var(--accent);
+  }
+  /* The current page is marked by a word and a dot as well as by colour,
+     so it does not depend on colour alone to be readable. */
+  .overlay-here {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--yellow);
+    text-transform: uppercase;
+  }
+  .overlay-cta {
+    padding-top: 4px;
+  }
+  .overlay-cta :global(.apply) {
+    font-size: 16px;
+    padding: 18px 24px;
+  }
+
+  /* Hold the page still behind an open menu. Progressive: browsers
+     without :has() simply keep scrolling, which is harmless. */
+  :global(html:has(.nav-menu[open])) {
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .burger span {
+      transition: none;
+    }
+  }
+
+  /* ---- Desktop ---------------------------------------------------- */
+  @media (min-width: 769px) {
     .nav {
+      height: auto;
       padding: 18px 28px;
     }
     .nav-links {
       display: flex;
     }
     .nav-apply {
+      display: inline-block;
       font-size: 13px;
       padding: 11px 18px;
+    }
+    /* The overlay has no reason to exist once the links are in the bar. */
+    .nav-menu {
+      display: none;
     }
   }
 </style>
