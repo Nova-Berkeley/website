@@ -1,4 +1,4 @@
-import { stats } from '../config';
+import { site, stats } from '../config';
 
 /*
  * Placeholders you can use inside any string in src/content/pages/*.md.
@@ -7,6 +7,9 @@ import { stats } from '../config';
  *
  *   {projectsCompleted}  {industriesServed}  {activeMembers}
  *       The verified club numbers, from `stats` in src/config.ts.
+ *
+ *   {foundedYear}
+ *       From `site.foundedYear` in src/config.ts.
  *
  *   {clients}          every cleared client, written out as a list
  *   {clientsFeatured}  just the ones flagged `featured` in clients.yaml
@@ -28,6 +31,7 @@ const NUMBERS: Record<string, number> = {
   projectsCompleted: stats.projectsCompleted,
   industriesServed: stats.industriesServed,
   activeMembers: stats.activeMembers,
+  foundedYear: site.foundedYear,
 };
 
 /** "A", "A and B", "A, B, and C" */

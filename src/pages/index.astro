@@ -8,6 +8,7 @@ import PhotoSlot from '../components/PhotoSlot.astro';
 import Voices from '../components/Voices.astro';
 import ClientStrip from '../components/ClientStrip.astro';
 import { stats, clientDisplay } from '../config';
+import { fillStats } from '../lib/copy';
 import { berkeleyToday, statuses } from '../lib/schedule';
 
 const page = await getEntry('pages', 'home');
@@ -96,6 +97,14 @@ type Differentiator = { title: string; body: string };
               </div>
             </div>
             <div class="hero-aside">
+              {/* Label, hairline, blurb: the rule grows to fill whatever
+                  height is left, so the column reads as a composition
+                  rather than as a blurb pinned to the bottom of a void.
+                  Both the label and the rule are desktop-only. */}
+              <p class="eyebrow hero-aside-label">
+                {fillStats(c.heroAsideLabel)}
+              </p>
+              <span class="hero-aside-rule" aria-hidden="true"></span>
               <p class="prose hero-intro">{c.heroIntro}</p>
             </div>
           </section>
@@ -273,6 +282,12 @@ type Differentiator = { title: string; body: string };
   }
   .home-content :global(.hero-photo) {
     border-bottom: var(--hairline) solid var(--rule);
+  }
+  /* The right column only exists as a column on desktop, so its label
+     and connecting rule do not render on mobile at all. */
+  .hero-aside-label,
+  .hero-aside-rule {
+    display: none;
   }
 
   /* Stats */
@@ -472,10 +487,31 @@ type Differentiator = { title: string; body: string };
       border-right: var(--hairline) solid var(--rule);
     }
     .hero-aside {
-      padding: 52px 36px;
+      padding: 52px 36px 56px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
+      align-items: flex-start;
+    }
+    .hero-aside-label {
+      display: block;
+      margin-bottom: 0;
+      color: var(--client);
+    }
+    /* Hairline dropping from the label to the blurb. flex-grow makes it
+       absorb the leftover height, which is what turns the empty space
+       into a deliberate interval. The first 18px picks up the accent so
+       the rule reads as issuing from the label. */
+    .hero-aside-rule {
+      display: block;
+      flex: 1 1 auto;
+      width: var(--hairline);
+      min-height: 40px;
+      margin: 18px 0;
+      background: linear-gradient(
+        to bottom,
+        var(--accent) 0 18px,
+        var(--rule) 18px 100%
+      );
     }
     .hero-h {
       font-size: 104px;
@@ -483,7 +519,7 @@ type Differentiator = { title: string; body: string };
       letter-spacing: -0.02em;
     }
     .hero-intro {
-      margin-top: 0;
+      margin: 0;
       font-size: 17px;
     }
     .hero-actions {
