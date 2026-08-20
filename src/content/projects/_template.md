@@ -8,7 +8,7 @@
 #    1. Copy this file to a new name, e.g. `acme-pricing.md`
 #    2. Fill in the fields below and delete these comments
 #    3. Commit — the Projects page picks it up automatically and the
-#       "case studies coming soon" state disappears on its own
+#       case-study sections appear on their own
 #
 #  ⚠ CLEARANCE: only publish a client name once the engagement
 #  contract or NDA is confirmed to permit it. If it does not, leave the

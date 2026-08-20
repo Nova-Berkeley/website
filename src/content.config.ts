@@ -68,8 +68,8 @@ const team = defineCollection({
 
 /* Case studies / engagements. One Markdown file per project so each can
    grow a full write-up in its body later. While the folder holds no
-   entries, /projects renders a "case studies coming soon" state. See
-   _template.md in that folder for the shape of one. */
+   entries the case-study sections on /projects are not rendered at all.
+   See _template.md in that folder for the shape of one. */
 const projects = defineCollection({
   loader: glob({ pattern: ['*.md', '!_*.md'], base: './src/content/projects' }),
   schema: z.object({

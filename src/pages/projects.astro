@@ -3,7 +3,6 @@ import { getCollection, getEntry } from 'astro:content';
 import InnerLayout from '../layouts/InnerLayout.astro';
 import Section from '../components/Section.astro';
 import ProjectCard from '../components/ProjectCard.astro';
-import EmptyState from '../components/EmptyState.astro';
 import ClientStrip from '../components/ClientStrip.astro';
 import { site, isSet, clientDisplay } from '../config';
 import { fillStats } from '../lib/copy';
@@ -18,9 +17,9 @@ const featured = all.find((p) => p.data.featured);
 const lead = all.find((p) => p.data.lead);
 const smalls = all.filter((p) => !p.data.featured && !p.data.lead);
 
-/* While no case study has been published, the page says so rather than
-   showing a placeholder. Drop a file into src/content/projects/ and the
-   real sections take over automatically. */
+/* The case-study sections are absent while the collection is empty, the
+   same way the alumni and voices sections behave. Drop a file into
+   src/content/projects/ and they appear on their own. */
 const hasWork = all.length > 0;
 const showClientCta = isSet(site.partnersEmail);
 
@@ -34,9 +33,7 @@ const showClients =
 const sections = [
   'hero',
   ...(showClients ? ['clients'] : []),
-  ...(hasWork
-    ? [...(featured ? ['featured'] : []), 'grid']
-    : ['empty']),
+  ...(hasWork ? [...(featured ? ['featured'] : []), 'grid'] : []),
   ...(showClientCta ? ['clientCta'] : []),
 ];
 const n = (key: string) => String(sections.indexOf(key) + 1).padStart(2, '0');
@@ -66,8 +63,9 @@ const last = String(sections.length).padStart(2, '0');
     )
   }
 
+  <!-- case studies (absent until src/content/projects/ has entries) -->
   {
-    hasWork ? (
+    hasWork && (
       <>
         {featured && (
           <Section n={n('featured')} eyebrow={c.featuredEyebrow}>
@@ -87,10 +85,6 @@ const last = String(sections.length).padStart(2, '0');
           </div>
         </Section>
       </>
-    ) : (
-      <Section n={n('empty')} eyebrow={c.emptyEyebrow}>
-        <EmptyState heading={c.empty.heading} body={c.empty.body} />
-      </Section>
     )
   }
 
