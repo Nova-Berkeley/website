@@ -79,10 +79,10 @@ const orgSchema = {
 <meta name="description" content={description} />
 <link rel="canonical" href={canonicalURL} />
 
-<!-- Dark is canonical; the browser UI follows the OS just like the page. -->
-<meta name="color-scheme" content="dark light" />
-<meta name="theme-color" content="#141f42" media="(prefers-color-scheme: dark)" />
-<meta name="theme-color" content="#fafbfd" media="(prefers-color-scheme: light)" />
+<!-- One palette, so the browser UI is told not to auto-darken the page
+     and the address bar is tinted to match the page background. -->
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#fafbfd" />
 
 <!-- Open Graph -->
 <meta property="og:type" content="website" />

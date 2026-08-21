@@ -166,9 +166,9 @@ That file is not tracked in git and never reaches the site; see
 
 ### About the logos
 
-Logos appear in **full brand colour on a white tile**, in both light and dark
-mode — white is the surface these marks were designed for. In light mode the
-tile takes a hairline edge so it does not vanish into the near-white page.
+Logos appear in **full brand colour on a white tile** — white is the surface
+these marks were designed for. The tile takes a hairline edge so it does not
+vanish into the near-white page.
 
 - The logo file must have a **transparent background** and be a real SVG.
 - Sizes are worked out automatically from each SVG's own proportions, so every
@@ -211,10 +211,14 @@ something to show. None of them need a developer.
 
 ## 🎨 Design tokens (colors)
 
-Every color is defined once in **`src/styles/tokens.css`**. Dark is the
-canonical brand look and shows by default; visitors whose device is in light
-mode automatically get the light palette. There is no manual theme switch —
-the operating system decides. The logo swaps automatically to match.
+Every color is defined once in **`src/styles/tokens.css`**. The site has one
+palette: it does not follow the device's light/dark setting and there is no
+theme switch, so every visitor sees the same page.
+
+Because no component contains a colour of its own, changing the whole site's
+look is a matter of editing that one file. A dark palette could be added back
+later as a `prefers-color-scheme: dark` block over the same token names,
+without touching a single component.
 
 ---
 
@@ -237,7 +241,7 @@ src/
 ├── config.ts            # site-wide links & settings (see above)
 ├── content/             # ALL editable copy (see the table above)
 ├── content.config.ts    # validation rules for the content
-├── styles/tokens.css    # every color, one file (dark + light)
+├── styles/tokens.css    # every color, one file
 ├── styles/global.css    # shared "hairline grid" styles
 ├── layouts/             # page shells (base + inner-page)
 ├── components/          # Nav, Footer, cards, FAQ, forms, etc.

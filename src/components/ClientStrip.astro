@@ -30,8 +30,8 @@
  * width, so the dense tiles reading slightly wider is deliberate.
  *
  * COLOUR. Logos keep their own brand colours on a white tile — the
- * surface each mark was drawn for. In light mode the tile would vanish
- * into the near-white page, so it takes a hairline edge there.
+ * surface each mark was drawn for. The tile would otherwise vanish into
+ * the near-white page, so it takes a hairline edge.
  *
  * SIZING. Logos are normalised by *area*, not width or height. A long
  * wordmark (Oracle, 7.7:1) and a squarer mark (NASA insignia, 1.2:1)
@@ -243,7 +243,7 @@ const asLogos = clientDisplay === 'logos';
     text-align: center;
     line-height: 1.1;
     /* Always on white, so it takes the on-tile ink colour rather than a
-       page token that would disappear in dark mode. */
+       page token, which would not be guaranteed to contrast with it. */
     color: var(--tile-ink);
   }
 

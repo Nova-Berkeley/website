@@ -2,17 +2,15 @@
 /*
  * A photograph slot with the brand's navy wash over it.
  *
- * ⚠ The wash is a TINT, not a scrim. It ties a photo into the navy
- * palette; it does not make the photo safe to put text on. Measured on
- * the current hero images, white ink over the washed highlights reaches
- * only 2.2:1 in dark mode, and navy ink over the washed shadows reaches
- * 1.2:1 in light mode. Both are far below the 4.5:1 AA needs.
+ * ⚠ The wash is a TINT, not a scrim. It ties a photo into the palette;
+ * it does not make the photo safe to put text on. Measured against the
+ * current hero images, the site's navy ink over the washed shadows
+ * reaches only 1.2:1, far below the 4.5:1 that AA asks for.
  *
  * Nothing on the site puts text over a photo today, so nothing fails.
  * If you ever want to, the tint is not enough: a band that carries text
- * needs a per-mode scrim (darken for white text, lighten for dark text)
- * tuned against that specific image, roughly 0.62 alpha in dark mode for
- * the current group photo. Do not just move text on top of this.
+ * needs a real scrim that lightens the image, tuned against that
+ * specific photo. Do not just move text on top of this.
  *
  * Honest-empty by default: with no `src` this renders NOTHING, so an
  * unfilled slot costs the page nothing rather than showing an obviously

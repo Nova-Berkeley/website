@@ -4,57 +4,58 @@
   Every colour in the site is defined here, once. Nothing else in the
   codebase should contain a raw hex value.
 
-  Dark is the canonical brand look, so it lives in :root and is what
-  visitors see by default. Visitors whose device is set to "light mode"
-  get the light palette via the prefers-color-scheme override below.
-  There is no manual theme toggle — the operating system decides.
+  The site has ONE palette. It does not follow the operating system's
+  light/dark setting and there is no theme toggle: every visitor sees
+  the same page. Values come from the 3A design frames.
 
-  Dark values come from the 2A design frames; light from the 3A frames.
+  If a dark palette is ever wanted back, it belongs here as a
+  `@media (prefers-color-scheme: dark)` block overriding these same
+  token names — no component would need to change, because no component
+  contains a colour of its own.
 */
 
 :root {
   /* Surfaces */
-  --bg: #141f42;          /* page background (deep navy) */
-  --backdrop: #0e1730;    /* area behind the centred column on wide screens */
-  --panel: #1e2b54;       /* cards, raised panels */
+  --bg: #fafbfd;          /* page background */
+  --backdrop: #e9ecf3;    /* area behind the centred column on wide screens */
+  --panel: rgba(155, 204, 250, 0.15);  /* cards, raised panels */
 
   /* Text */
-  --ink: #eef2fb;         /* primary text */
-  --ink-soft: #c7d2ec;    /* body copy, secondary text */
-  --accent: #9bccfa;      /* eyebrows, links, small labels (pale blue) */
-  --client: #acb1be;      /* client / muted display text */
-  --dim: #5f6f9c;         /* faint metadata */
+  --ink: #141f42;         /* primary text (deep navy) */
+  --ink-soft: #33406a;    /* body copy, secondary text */
+  --accent: #3461d3;      /* eyebrows, links, small labels */
+  --client: #8a93b8;      /* client / muted display text */
+  --dim: #a9b2ce;         /* faint metadata */
 
   /* Hairlines */
-  --rule: rgba(155, 204, 250, 0.25);
-  --rule-soft: rgba(155, 204, 250, 0.18);
+  --rule: rgba(52, 97, 211, 0.3);
+  --rule-soft: rgba(52, 97, 211, 0.2);
 
   /* Diagonal photo-placeholder stripes */
-  --tile-a: #2c3e6b;
-  --tile-b: #24345f;
-  --tile-label: #8093c4;
-  --overlay: rgba(20, 31, 66, 0.35);
+  --tile-a: #d8e4fb;
+  --tile-b: #e9f1fd;
+  --tile-label: #6b77a0;
+  --overlay: rgba(52, 97, 211, 0.12);
 
-  /* Brand accents (identical in both modes) */
+  /* Brand accents */
   --yellow: #fef091;
   --yellow-ink: #141f42;
   --btn: #3461d3;         /* primary blue button */
   --btn-ink: #ffffff;
 
   /* Link hover (from the brand kit) */
-  --link-hover: #eef2fb;
+  --link-hover: #2c0885;
 
   /* Inline form-error text */
-  --danger: #ff9b9b;
+  --danger: #b3261e;
 
   /* Client logo tiles. Logos keep their own brand colours, so the tile
-     under them is always white in both themes — it is the surface the
-     mark was designed to sit on. In light mode the tile would otherwise
-     vanish into the near-white page, so it gets a hairline there. */
+     under them is white — the surface the mark was designed to sit on.
+     It would otherwise vanish into the near-white page, so it takes a
+     hairline edge. */
   --tile-white: #ffffff;
-  --tile-edge: transparent;
-  /* Text sitting ON a white tile — navy in both themes, because the
-     tile is white in both themes. */
+  --tile-edge: rgba(52, 97, 211, 0.22);
+  /* Text sitting ON a white tile. */
   --tile-ink: #141f42;
 
   /* Type */
@@ -67,30 +68,4 @@
      tiles read as cards rather than as holes cut in the grid. */
   --radius-tile: 10px;
   --shell-w: 900px;       /* max width of the inner-page reading column */
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #fafbfd;
-    --backdrop: #e9ecf3;
-    --panel: rgba(155, 204, 250, 0.15);
-
-    --ink: #141f42;
-    --ink-soft: #33406a;
-    --accent: #3461d3;
-    --client: #8a93b8;
-    --dim: #a9b2ce;
-
-    --rule: rgba(52, 97, 211, 0.3);
-    --rule-soft: rgba(52, 97, 211, 0.2);
-
-    --tile-a: #d8e4fb;
-    --tile-b: #e9f1fd;
-    --tile-label: #6b77a0;
-    --overlay: rgba(52, 97, 211, 0.12);
-
-    --link-hover: #2c0885;
-    --danger: #b3261e;
-    --tile-edge: rgba(52, 97, 211, 0.22);
-  }
 }
